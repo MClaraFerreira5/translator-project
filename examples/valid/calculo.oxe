@@ -1,0 +1,7 @@
+inteiro primeiro bota 2
+inteiro segundo bota 3
+inteiro terceiro bota 4
+inteiro resultado bota primeiro + segundo * terceiro
+inteiro agrupado bota (primeiro + segundo) * terceiro
+desembucha(vei Resultado tendeu; resultado)
+desembucha(vei Com parenteses tendeu; agrupado)

@@ -1,0 +1,7 @@
+inteiro contador bota 1
+inteiro soma bota 0
+num_para ate (contador > 5) bora
+    soma bota soma + contador
+    contador bota contador + 1
+arremata
+desembucha(soma)

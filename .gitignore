@@ -1,0 +1,27 @@
+# Diretórios locais de compilação e IDEs
+/build/
+/cmake-build-*/
+/.idea/
+
+# Objetos, bibliotecas e executáveis produzidos futuramente
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# Destinos previstos para fontes e C++ gerados; preservar fontes escritas à mão
+/generated/
+/src/frontend/generated/
+lex.yy.c
+lex.yy.cc
+lex.yy.cpp
+*.tab.c
+*.tab.cc
+*.tab.cpp
+*.tab.h
+*.tab.hh
+*.output
