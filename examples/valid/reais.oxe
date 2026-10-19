@@ -1,0 +1,6 @@
+inteiro quantidade bota 3
+tronxo total bota quantidade
+tronxo metade bota 5 / 2
+total bota total + 0,5
+desembucha(total)
+desembucha(metade)

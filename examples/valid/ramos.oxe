@@ -1,0 +1,10 @@
+inteiro nota bota 6
+vai_que (nota >= 7) bora
+    desembucha(vei Aprovado tendeu)
+arremata
+se_num_for (nota >= 5) bora
+    desembucha(vei Recuperacao tendeu)
+arremata
+pois_pronto bora
+    desembucha(vei Reprovado tendeu)
+arremata

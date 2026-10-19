@@ -1,0 +1,9 @@
+inteiro idade bota 18
+papo autorizado bota evera
+papo bloqueado bota pala
+vai_que ((idade >= 18 ou autorizado) e ai_dento bloqueado) bora
+    desembucha(vei Acesso permitido tendeu)
+arremata
+pois_pronto bora
+    desembucha(vei Acesso negado tendeu)
+arremata
