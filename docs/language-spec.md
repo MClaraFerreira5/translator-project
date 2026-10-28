@@ -1,9 +1,26 @@
 # Especificação consolidada da Oxente Lang
 
-Esta consolidação deriva exclusivamente da [versão entregue](references/definicao-entregue.md).
+As regras desta consolidação derivam da [versão entregue](references/definicao-entregue.md).
+A mudança de destino para Python 3 é uma decisão posterior explícita do grupo,
+registrada na OX-01; a proposta histórica permanece preservada.
 A proposta foi aprovada, mas o tradutor ainda não foi implementado. Regras
 descritas aqui são compromissos documentais; esboços e lacunas são identificados.
 Consulte a [procedência das fontes](references/README.md).
+
+## Destino e escopo prioritário
+
+O tradutor será implementado em **C++17 com Flex e Bison** e gerará **Python 3**.
+O fluxo planejado é: arquivo `.oxe` → Flex → Bison → AST → análise
+semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
+A escolha segue a recomendação do professor para simplificar a geração de código
+e dispensar a compilação da linguagem-alvo antes da execução.
+
+O núcleo prioritário para **12/11/2026** inclui operações/expressões, os quatro
+tipos, variáveis, atribuições, entrada/saída, condicionais, laços e seus controles,
+AST, tabela de símbolos, verificações léxicas/sintáticas/semânticas e tradução
+para Python 3. A entrega final está prevista para **26/11/2026**. Funções e
+procedimentos são extensões após o núcleo; `liso` e `balaio` dependem de
+especificação adicional. Nenhum desses recursos está implementado nesta etapa.
 
 ## Tipos, declarações e valores
 
@@ -115,7 +132,14 @@ desta versão; a menção de lista não altera esse escopo.
 | §3 diz que espaços são significativos | Não deduzir indentação sintática; confirmar tratamento fora de textos e limites de palavras |
 | §8 inclui `liso` e `balaio` sem regras | Manter pendentes e fora dos exemplos do núcleo |
 | §6, caso 2, contém `vai_que 2x)` e tabulações verticais; explicação alega falta de `)` antes de `bora`, que nem aparece | Não reutilizar como caso isolado; exemplos derivados devem ter falha inequívoca |
+| OX-01 atribui à especificação original divisão inteira por truncamento para zero; §2.3 da cópia entregue só exemplifica operandos positivos | Confirmar a regra para negativos e o resto associado; não adotar automaticamente o piso de Python |
 | §7 contém instruções separadas por tabulações verticais | Corrigir apenas os exemplos derivados para LF, mantendo a fonte intacta |
+
+Também precisam de confirmação a formatação de reais com três casas
+(arredondamento), os formatos de entrada e separadores de saída, as faixas e
+a precisão numéricas e as regras completas da extensão de funções. Os
+[riscos do destino Python](architecture.md#riscos-da-tradução-para-python-3)
+orientam os cards futuros sem definir soluções nesta tarefa.
 
 Outras lacunas específicas: [léxico](tokens.md#pontos-a-confirmar),
 [sintaxe](grammar.md#pontos-a-confirmar) e [semântica](semantics.md#pontos-a-confirmar).

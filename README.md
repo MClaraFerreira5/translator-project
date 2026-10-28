@@ -1,22 +1,28 @@
 # Oxente Lang
 
 Linguagem educacional do projeto da disciplina de Compiladores. A modalidade
-escolhida é um **tradutor Oxente Lang → C++**, com implementação planejada em
+escolhida é um **tradutor Oxente Lang → Python 3**, com implementação planejada em
 **C++17**, usando **Flex** para análise léxica e **Bison** para análise sintática.
 
 **Estado atual:** especificação aprovada; estrutura e documentação em preparação;
 implementação ainda não iniciada. Não há tradutor, build ou comandos de execução
 disponíveis nesta etapa.
 
-O pipeline planejado é: código `.oxe` → tokens → AST explícita → análise
-semântica e tabela de símbolos → geração de C++ → compilador C++ → executável.
+O pipeline planejado é: arquivo `.oxe` → Flex → Bison → AST explícita → análise
+semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
+
+A adoção de Python 3 como destino é uma decisão posterior do grupo, registrada
+na OX-01, seguindo a recomendação do professor: simplifica a geração e dispensa
+uma etapa de compilação da linguagem-alvo. O tradutor continua planejado em
+C++17 com Flex/Bison; os programas traduzidos serão código Python 3.
 
 ## Escopo
 
-O núcleo obrigatório da disciplina contempla expressões aritméticas, variáveis,
-atribuição, saída, condicional, repetição, análises léxica/sintática/semântica,
-AST explícita, tabela de símbolos e tradução. A proposta aprovada detalha esse
-núcleo com quatro tipos, entrada, operadores lógicos, escopos e controles de laço.
+O núcleo prioritário para **12/11/2026** contempla expressões aritméticas, variáveis,
+atribuição, entrada/saída, condicionais, laços, análises léxica/sintática/semântica,
+AST explícita, tabela de símbolos e tradução para Python 3. A proposta aprovada
+detalha esse núcleo com quatro tipos, operadores lógicos, escopos e controles
+de laço.
 
 Funções, procedimentos, parâmetros e retornos são **extensões planejadas após o
 núcleo funcional**. `liso` e `balaio` são itens pendentes, sem regras completas.
