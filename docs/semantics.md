@@ -78,12 +78,13 @@ de múltiplos erros é possibilidade futura. Mensagens devem indicar localizaç�
 - Nome duplicado: `valor_sem_pe_nem_cabeca`.
 - Zero em `/`, `//` ou `%`: interromper com `dividiu_por_nada`, operação e linha
   de origem. O gerador deverá inserir verificações; não delegar o diagnóstico
-  simplesmente ao compilador C++.
+  simplesmente ao interpretador Python 3.
 
 Operações só são válidas dentro das faixas dos tipos escolhidos. A implementação
-deverá documentar limites e verificar operações para evitar overflow inteiro com
-sinal e resultados reais não finitos. Larguras de tipos, mensagens desses erros
-e detalhes de arredondamento ainda não foram decididos. Não há vetores/indexação,
+deverá documentar limites e verificar operações para rejeitar valores fora da
+faixa e resultados reais não finitos, mesmo que Python aceite inteiros maiores.
+Larguras de tipos, mensagens desses erros e detalhes de arredondamento ainda
+não foram decididos. Não há vetores/indexação,
 portanto acesso fora dos limites não integra esta versão.
 
 ## Exemplos de decisões
@@ -126,11 +127,20 @@ extensão existir. `toma` e `sem_futuro` não acrescentam instruções ao núcle
 
 - Matriz de tipos dos operadores relacionais e igualdade.
 - Curto-circuito de `e`/`ou` e ordem de avaliação de operandos/argumentos.
-- Regra de divisão inteira e resto para negativos; domínio detalhado de `**`.
+- Regra de divisão inteira e resto para negativos: a OX-01 cita truncamento
+  para zero como regra original, mas o §2.3 da cópia entregue não o explicita.
+  Confirmar com o grupo; Python usa piso, que difere para quocientes negativos
+  não exatos. Confirmar também o domínio detalhado de `**`.
 - Faixas numéricas, precisão, arredondamento para três casas e diagnósticos de
-  overflow/resultado não finito. Não impor limites do C++ como regra aprovada.
+  overflow/resultado não finito. Não impor limites do C++ ou a precisão
+  arbitrária dos inteiros Python como regra aprovada.
 - Formatos de entrada (especialmente `papo`, `tronxo`, `resenha`) e separação
   exata na saída; a fonte dá exemplos, mas não um contrato completo de I/O.
 - Escopo e atualização de `arrodeia`, controle em laços aninhados e política de
   retorno em todos os caminhos na extensão futura.
 - `liso`/`balaio` permanecem sem gramática, tipo e comportamento, fora do núcleo.
+
+A geração planejada tem como destino Python 3. As diferenças de escopo,
+operadores, avaliação e entrada/saída estão registradas nos
+[riscos da tradução](architecture.md#riscos-da-tradução-para-python-3);
+nenhuma solução de runtime está implementada.

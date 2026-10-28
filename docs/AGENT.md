@@ -2,8 +2,10 @@
 
 ## Escopo e fonte de verdade
 
-Oxente Lang é um projeto acadêmico de tradutor para C++, planejado em C++17,
-Flex e Bison. Consulte a [definição entregue](references/definicao-entregue.md),
+Oxente Lang é um projeto acadêmico de tradutor para Python 3, com implementação
+planejada em C++17, Flex e Bison. A mudança de destino foi decidida pelo grupo
+na OX-01, após a proposta entregue; as fontes históricas permanecem intactas.
+Consulte a [definição entregue](references/definicao-entregue.md),
 fonte principal, e o [enunciado da disciplina](references/projeto-disciplina.md).
 A [procedência](references/README.md) das cópias deve continuar documentada.
 Não substitua a versão entregue por rascunhos nem corrija a fonte silenciosamente.
@@ -33,10 +35,11 @@ ou validação automática que não ocorreu. Preserve os artefatos da fonte orig
 ## Arquitetura e evolução
 
 Siga a [arquitetura planejada](architecture.md): tokens → AST explícita → análise
-semântica/tabela de símbolos → C++. O código gerado pelo Bison não é a AST.
+semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
+O código gerado pelo Bison não é a AST.
 Visitor está previsto para percursos; IR separada e otimizações não são obrigatórias.
 Mantenha responsabilidades de `src/*` delimitadas e considere o runtime para
-preservar regras próprias, evitando herdar acidentalmente a semântica de C++.
+preservar regras próprias, evitando herdar acidentalmente a semântica de Python.
 
 Ao alterar uma regra confirmada, atualize especificação, tokens, gramática,
 semântica e exemplos afetados. Verifique links e diferencie comportamento
