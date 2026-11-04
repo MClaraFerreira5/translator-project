@@ -1,8 +1,10 @@
 # Arquitetura futura
 
-**Estado implementado (OX-02):** documentação, exemplos, build CMake, CLI e
-integração provisória Flex/Bison. Não há lexer/parser da linguagem, AST em código,
-verificador semântico, gerador ou runtime. O pipeline abaixo permanece planejado.
+**Estado implementado (OX-04):** documentação, exemplos, build CMake, CLI e
+scanner Flex com harness e testes léxicos. O contrato reentrante Flex/Bison já
+entrega tokens, lexemas e localizações; o parser continua provisório. Não há AST
+em código, verificador semântico, gerador ou runtime. O restante do pipeline
+permanece planejado.
 Veja o [contrato da CLI e build](../README.md#contrato-da-cli-ox-02).
 
 ## Fluxo previsto
@@ -49,7 +51,10 @@ executará os programas que ele gerar.
 A OX-02 acrescenta `src/main.cpp`, integração mínima em `src/frontend/`,
 `CMakeLists.txt` e testes de infraestrutura/CLI em `tests/`. Os demais diretórios
 permanecem reservados. Artefatos ficam na árvore de build ignorada pelo Git.
-Os arquivos `infra.l` e `infra.y` não definem tokens nem gramática da linguagem.
+A OX-04 implementa o scanner em `infra.l`, tokens e contrato mínimo em `infra.y`,
+encapsulamento em `scanner.hpp`/`scanner.cpp` e inspeção em `tokens_main.cpp`.
+`infra.y` ainda não implementa a gramática da linguagem. O [contrato do scanner](../README.md#scanner-e-inspeção-de-tokens-ox-04)
+documenta propriedade de valores, localizações e limitações para OX-05/OX-07.
 
 O runtime poderá tratar vírgula e três casas decimais na saída de `tronxo`,
 divisão real mesmo com operandos inteiros, verificações de zero, domínio e faixas

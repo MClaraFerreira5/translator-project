@@ -1,0 +1,23 @@
+file(MAKE_DIRECTORY "${DESTINO}")
+file(WRITE "${DESTINO}/valido.oxe" "arrodeia\r\n0")
+execute_process(COMMAND "${TOKENS}" "${DESTINO}/valido.oxe"
+  RESULT_VARIABLE resultado OUTPUT_VARIABLE saida ERROR_VARIABLE erro)
+set(esperado "ARRODEIA 1:1-1:9 \"arrodeia\"\nNL 1:9-2:1 \"\\r\\n\"\nINTEIRO 2:1-2:2 \"0\"\nEOF 2:2-2:2 \"\"\n")
+if(NOT resultado EQUAL 0 OR NOT saida STREQUAL esperado OR NOT erro STREQUAL "")
+  message(FATAL_ERROR "Tokenização válida falhou: ${resultado}; ${saida}; ${erro}")
+endif()
+file(WRITE "${DESTINO}/invalido.oxe" "\r\n\r\n@")
+execute_process(COMMAND "${TOKENS}" "${DESTINO}/invalido.oxe"
+  RESULT_VARIABLE resultado OUTPUT_VARIABLE saida ERROR_VARIABLE erro)
+if(NOT resultado EQUAL 1 OR NOT erro MATCHES ":3:1: erro léxico: caractere não reconhecido")
+  message(FATAL_ERROR "Erro léxico não propagado: ${resultado}; ${erro}")
+endif()
+execute_process(COMMAND "${TOKENS}" RESULT_VARIABLE resultado OUTPUT_VARIABLE saida ERROR_VARIABLE erro)
+if(NOT resultado EQUAL 2 OR NOT saida STREQUAL "" OR NOT erro MATCHES "Uso:")
+  message(FATAL_ERROR "Uso do harness incorreto")
+endif()
+execute_process(COMMAND "${TOKENS}" "${DESTINO}/ausente.oxe"
+  RESULT_VARIABLE resultado OUTPUT_VARIABLE saida ERROR_VARIABLE erro)
+if(NOT resultado EQUAL 3 OR NOT saida STREQUAL "")
+  message(FATAL_ERROR "Entrada ausente não propagada")
+endif()

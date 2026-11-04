@@ -1,8 +1,10 @@
 # Catálogo de tokens e decisões léxicas
 
 Base: §3 e tabela final da [definição entregue](references/definicao-entregue.md).
-Este catálogo não é um lexer implementado. Consulte a [especificação](language-spec.md)
-e a [gramática inicial](grammar.md).
+O scanner Flex da OX-04 implementa o subconjunto inequívoco deste catálogo.
+O [contrato técnico e as limitações](../README.md#scanner-e-inspeção-de-tokens-ox-04)
+distinguem reconhecimento léxico de suporte sintático/semântico.
+Consulte a [especificação](language-spec.md) e a [gramática inicial](grammar.md).
 
 ## Caracteres, nomes e palavras
 
@@ -67,7 +69,8 @@ representação literal da palavra `tendeu` ainda não estão definidos.
 `//` é divisão inteira, não comentário. `=` isolado e aspas não têm token de
 atribuição/texto definido. Ao implementar, será necessário distinguir operadores
 de vários caracteres de seus prefixos e palavras completas de identificadores;
-as regras operacionais de reconhecimento ainda não foram testadas no Flex.
+o reconhecimento de maior correspondência e os limites de palavras são testados
+no Flex pela OX-04.
 
 ## Comentários e linhas
 
