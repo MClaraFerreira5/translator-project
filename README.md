@@ -4,9 +4,10 @@ Linguagem educacional do projeto da disciplina de Compiladores. A modalidade
 escolhida é um **tradutor Oxente Lang → Python 3**, com implementação planejada em
 **C++17**, usando **Flex** para análise léxica e **Bison** para análise sintática.
 
-**Estado atual (OX-02):** especificação aprovada, build CMake e CLI disponíveis.
-A integração mínima Flex/Bison comprova a compilação dos geradores; não implementa
-a linguagem. Análise, AST, semântica e tradução ainda não estão disponíveis.
+**Estado atual (OX-04):** especificação aprovada, build CMake, CLI e scanner Flex
+com testes independentes da gramática. O scanner reconhece o subconjunto léxico
+inequívoco e sinaliza limitações documentais. Parser funcional, AST, semântica e
+tradução ainda não estão disponíveis.
 
 O pipeline planejado é: arquivo `.oxe` → Flex → Bison → AST explícita → análise
 semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
@@ -78,7 +79,7 @@ os comandos abaixo não exigem uma instalação nativa de Flex/Bison no PowerShe
    cd ~/projetos
    git clone https://github.com/YannLeao/translator-project.git
    cd translator-project
-   git switch feat/ox-02-build-cli
+   git switch main
    cmake -S . -B build
    cmake --build build --parallel 2
    ctest --test-dir build --output-on-failure
@@ -138,14 +139,74 @@ sem antecipar a padronização de diagnósticos da OX-10. Por exemplo:
 # código de saída: 4
 ```
 
-A integração usa o esqueleto C do Bison compilado como C++17 e o scanner C do
-Flex também compilado como C++, com prefixo privado `oxinfra`. Não depende de
-`libfl`: `noyywrap` remove esse requisito. O scanner provisório devolve um único
-marcador de indisponibilidade e a produção sempre aborta, inclusive rejeitando
-entrada vazia. Os símbolos são ligados ao executável, mas a CLI não os chama.
-OX-04/OX-05 deverão substituir esses arquivos e definir tokens, localizações,
-contexto e interfaces reais; o prefixo provisório não constitui API estável.
-OX-03 permanece responsável pela AST, que não é o código gerado pelo Bison.
+## Scanner e inspeção de tokens (OX-04)
+
+```bash
+ctest --test-dir build -R lexer --output-on-failure
+./build/oxente-tokens examples/valid/calculo.oxe
+printf 'arrodeia\r\n0' > build/tokens-valido.oxe
+./build/oxente-tokens build/tokens-valido.oxe
+# ARRODEIA 1:1-1:9 "arrodeia"
+# NL 1:9-2:1 "\r\n"
+# INTEIRO 2:1-2:2 "0"
+# EOF 2:2-2:2 ""
+# código 0
+printf '\r\n\r\n@' > build/tokens-invalido.oxe
+./build/oxente-tokens build/tokens-invalido.oxe
+# stderr: build/tokens-invalido.oxe:3:1: erro léxico: caractere não reconhecido: "@"
+# código 1; stdout contém os NL anteriores ao erro
+```
+
+O executável separado aceita um caminho (sem opções); imprime nome do token,
+intervalo `linha:coluna-linha:coluna` e lexema entre aspas, com caracteres de
+controle escapados **na saída de inspeção**. Isso não define escapes da linguagem.
+Códigos: 0 tokenização concluída, 1 erro léxico ou caso documental pendente,
+2 uso incorreto, 3 falha de abertura/leitura. Tokenização concluída não é validação
+sintática/semântica. A CLI `oxente` mantém os três modos não implementados.
+
+A integração conserva o esqueleto C do Bison e o scanner C do Flex compilados
+como C++17, sem `libfl`, com prefixo `oxinfra`. O scanner agora é reentrante e o
+parser usa `api.pure full`, `%locations` e o parâmetro `void* scanner`.
+`src/frontend/infra.y` é a fonte única dos tokens. O parser provisório continua
+rejeitando qualquer entrada, inclusive vazia; não tem produções da linguagem.
+
+`oxente::Scanner` em `src/frontend/scanner.hpp` encapsula o estado Flex e empresta
+o `FILE*` do consumidor. Cada token não EOF entrega um `std::string*` em
+`OXINFRASTYPE::texto`: **o consumidor deve liberá-lo**. O Bison já declara
+`%destructor`; futuras ações da OX-05/OX-07 deverão mover/copiar esses valores e
+liberá-los ao construir a AST explícita. Todos os lexemas são preservados,
+inclusive zeros iniciais, vírgula decimal e delimitadores de texto, sem converter
+para `int`/`double` nem fixar limites numéricos ou espaços de borda do valor textual.
+
+Localizações começam em 1 e usam fim exclusivo. Cada byte ASCII e cada tabulação
+avançam uma coluna de origem; CRLF avança uma linha, como LF. EOF tem intervalo
+vazio no cursor e não cria `NL` artificial: o parser futuro deverá consumi-lo como
+término da última instrução. `ErroLexico` carrega intervalo e mensagem; a análise
+para no primeiro erro e o consumidor deve abandonar essa instância do scanner.
+
+Como espaços significativos e o tratamento sintático de comentários permanecem
+pendentes, o scanner preserva espaços/tabulações externos em `ESPACO` e emite
+`NL` para **todas as quebras físicas fora de textos**, inclusive em comentários.
+Não há tokens de indentação nem decisão de como esses tokens entram na gramática.
+Comentário não gera outros tokens nem aninha; posicionamento entre instruções
+completas será responsabilidade da integração futura, não validado pelo scanner.
+
+Textos suportados são ASCII não vazios em uma linha, com exatamente um espaço ou
+tabulação em cada borda; espaços internos são preservados. Texto vazio, múltiplos
+espaços de borda, barra inversa/escapes, texto multilinha, CR isolado, comentário
+de linha no EOF e números adjacentes a identificadores produzem diagnóstico
+**caso pendente na especificação**, sem declará-los erros aprovados da linguagem.
+Textos/comentários de bloco sem fechamento no EOF são erros léxicos. Os marcadores
+são palavras completas: `arrodeia_extra`, `espia_extra` e `tendeu_extra` não se
+subdividem. `tendeu`/`arriba` fora dos estados correspondentes têm tokens próprios;
+sua utilização será decidida pelo parser. As reservadas da extensão
+`aperreio`/`toma`/`sem_futuro` são reconhecidas, sem suporte a funções.
+`liso`/`balaio` não são reservadas nesta implementação.
+
+Os testes de lexer conferem tokens, lexemas, início/fim, reservadas, operadores,
+LF/CRLF/EOF, comentários, textos e falhas. Também exercitam instâncias isoladas,
+rejeição pelo parser provisório e códigos/canais do harness. As pendências
+continuam em [tokens](docs/tokens.md#pontos-a-confirmar); a OX-04 não as resolve.
 
 ## Escopo
 
