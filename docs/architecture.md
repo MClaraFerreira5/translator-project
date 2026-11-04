@@ -1,8 +1,9 @@
 # Arquitetura futura
 
-**Estado implementado:** somente documentação, exemplos de referência e pastas
-reservadas. Não há lexer, parser, AST em código, verificador semântico, gerador,
-runtime, build ou executável. Todas as etapas abaixo são planejamento.
+**Estado implementado (OX-02):** documentação, exemplos, build CMake, CLI e
+integração provisória Flex/Bison. Não há lexer/parser da linguagem, AST em código,
+verificador semântico, gerador ou runtime. O pipeline abaixo permanece planejado.
+Veja o [contrato da CLI e build](../README.md#contrato-da-cli-ox-02).
 
 ## Fluxo previsto
 
@@ -45,9 +46,10 @@ executará os programas que ele gerar.
 | `tests/` | Testes futuros das etapas implementadas e da tradução |
 | `scripts/` | Automações futuras que executem tarefas reais |
 
-Os diretórios de implementação, testes e scripts contêm apenas `.gitkeep`.
-Não há `CMakeLists.txt` nesta etapa: o build será configurado com fontes reais.
-Artefatos de build e fontes geradas terão destinos ignorados conforme `.gitignore`.
+A OX-02 acrescenta `src/main.cpp`, integração mínima em `src/frontend/`,
+`CMakeLists.txt` e testes de infraestrutura/CLI em `tests/`. Os demais diretórios
+permanecem reservados. Artefatos ficam na árvore de build ignorada pelo Git.
+Os arquivos `infra.l` e `infra.y` não definem tokens nem gramática da linguagem.
 
 O runtime poderá tratar vírgula e três casas decimais na saída de `tronxo`,
 divisão real mesmo com operandos inteiros, verificações de zero, domínio e faixas
