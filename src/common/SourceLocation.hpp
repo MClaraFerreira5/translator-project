@@ -1,6 +1,10 @@
 #pragma once
-struct SourceLocation
-{
+
+namespace oxente {
+
+struct SourceLocation {
     int line{0};
     int column{0};
 };
+
+} 

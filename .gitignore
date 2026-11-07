@@ -27,5 +27,3 @@ lex.yy.cpp
 *.tab.hh
 *.output
 
-# Arquivos de teste e cobertura
-tests/

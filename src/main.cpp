@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "common/Diagnostic.hpp"
+#include "common/DiagnosticEngine.hpp"
 
 namespace {
 int erro(const std::string& mensagem, int codigo = 2) {
@@ -26,7 +28,7 @@ int main(int argc, char* argv[]) {
         ajuda();
         return 0;
     }
-    std::string modo, entrada;
+    std::string modo, entrada, caminho_saida;
     bool fim_opcoes = false, tem_saida = false, tem_entrada = false;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -39,7 +41,7 @@ int main(int argc, char* argv[]) {
             tem_saida = true;
             if (i + 1 == argc || std::string(argv[i + 1]).empty() || argv[i + 1][0] == '-')
                 return erro("falta caminho após " + arg + "; para nomes com hífen, use ./nome.");
-            ++i; // Caminho validado; a emissão ainda não abre a saída.
+            caminho_saida = argv[++i];
         } else if (!fim_opcoes && !arg.empty() && arg[0] == '-') {
             return erro("opção desconhecida ou incompatível: " + arg + ". Consulte --help.");
         } else {
@@ -59,5 +61,25 @@ int main(int argc, char* argv[]) {
     std::ifstream arquivo(caminho, std::ios::binary);
     if (!arquivo) return erro("não foi possível abrir a entrada: " + entrada, 3);
     // Não invocar o parser provisório nem abrir/truncar qualquer saída.
-    return erro(modo + ": não implementado; nenhum programa foi analisado ou traduzido.", 4);
+    // Prepara o motor de diagnóstico para o arquivo atual
+    oxente::DiagnosticEngine engine(entrada, true); // true = para no primeiro erro
+
+    try {
+        // Quando as etapas forem conectadas, elas serão chamadas aqui dentro:
+        // ex: auto ast = parser.executar(engine);
+        // ex: semantico.verificar(ast, engine);
+        // ex: codegen.gerar(ast, caminho_saida);
+
+        return erro(modo + ": não implementado; nenhum programa foi analisado ou traduzido.", 4);
+
+    } catch (const oxente::DiagnosticException& diag) {
+        // CRITÉRIO DE ACEITE: "Garantir que erro impeça a emissão de Python válido"
+        // Se houve erro e um arquivo de saída já tinha sido criado, apague-o!
+        if (tem_saida && !caminho_saida.empty() && std::filesystem::exists(caminho_saida)) {
+            std::filesystem::remove(caminho_saida);
+        }
+
+        // Retorna 1 = Erro de compilação/tradução
+        return 1;
+    }
 }
