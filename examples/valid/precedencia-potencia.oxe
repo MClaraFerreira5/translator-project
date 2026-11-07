@@ -1,0 +1,6 @@
+tronxo a bota 2 ** 3 ** 2
+tronxo bota_negativo bota -2 ** 2
+tronxo multiplicacao bota 3 * 2 ** 3
+desembucha(a)
+desembucha(bota_negativo)
+desembucha(multiplicacao)

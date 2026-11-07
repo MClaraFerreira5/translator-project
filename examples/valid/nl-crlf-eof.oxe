@@ -1,0 +1,8 @@
+inteiro x bota 1
+
+inteiro y bota 2
+primeiramente linha com comentario
+
+
+inteiro z bota x + y
+desembucha(z)

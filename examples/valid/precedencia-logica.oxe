@@ -1,0 +1,8 @@
+papo c1 bota evera
+papo c2 bota pala
+papo r1 bota ai_dento c2 e c1
+papo r2 bota c2 ou c1 e c2
+papo r3 bota 10 > 5 e 2 <= 4
+desembucha(r1)
+desembucha(r2)
+desembucha(r3)

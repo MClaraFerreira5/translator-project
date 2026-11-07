@@ -1,0 +1,4 @@
+inteiro n bota 0
+num_para ate (10) bora
+    n bota n + 1
+arremata

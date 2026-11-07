@@ -1,0 +1,15 @@
+inteiro i bota 0
+inteiro total bota 0
+num_para ate (i > 3) bora
+    vai_que (i == 1) bora
+        total bota total + 10
+    arremata
+    se_num_for (i == 2) bora
+        total bota total + 20
+    arremata
+    pois_pronto bora
+        total bota total + 1
+    arremata
+    i bota i + 1
+arremata
+desembucha(total)
