@@ -42,4 +42,7 @@ if(BUILD_TESTING)
     -DGERADOR=${CMAKE_GENERATOR} -DCOMPILADOR=${CMAKE_CXX_COMPILER}
     -DFLEX_EXE=${FLEX_EXECUTABLE} -DBISON_EXE=${BISON_EXECUTABLE}
     -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/build-limpo.cmake")
+  add_executable(teste-diagnosticos tests/teste_diagnosticos.cpp)
+  target_include_directories(teste-diagnosticos PRIVATE src/common)
+  add_test(NAME diagnosticos COMMAND teste-diagnosticos)
 endif()
