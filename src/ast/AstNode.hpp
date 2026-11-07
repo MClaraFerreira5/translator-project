@@ -1,5 +1,6 @@
 #pragma once
 #include "../common/SourceLocation.hpp"
+using oxente::SourceLocation;
 
 class AstVisitor;
 

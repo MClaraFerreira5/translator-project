@@ -50,4 +50,8 @@ if(BUILD_TESTING)
   -DTOKENS=$<TARGET_FILE:oxente-tokens>
   -DFONTE=${CMAKE_CURRENT_SOURCE_DIR}
   -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/suite.cmake")
+  add_executable(test-scope tests/test_scope.cpp)
+  target_link_libraries(test-scope PRIVATE oxente_frontend)
+  target_include_directories(test-scope PRIVATE src src/common src/ast src/semantic)
+  add_test(NAME scope COMMAND test-scope)
 endif()
