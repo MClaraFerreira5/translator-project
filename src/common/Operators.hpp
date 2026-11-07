@@ -4,7 +4,8 @@ enum class BinaryOp {
     Soma,          
     Subtracao,    
     Multiplicacao, 
-    Divisao,      
+    Divisao, 
+    DivisaoInteira,     
     Modulo,       
     Potencia,     
     Igual,         
@@ -20,5 +21,6 @@ enum class BinaryOp {
 enum class UnaryOp {
     Positivo,      
     Negativo,     
-    Nao            
+    Nao,
+    Abs            
 };

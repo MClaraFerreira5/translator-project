@@ -139,7 +139,8 @@ int main() {
     ++casos;
     for (const std::string entrada : {"", "inteiro"}) {
       auto arquivo = fonte(entrada); oxente::Scanner scanner(arquivo.get());
-      exigir(oxinfraparse(scanner.instancia()) != 0, "parser provisório não pode aceitar programas");
+      oxente::ParserContext ctx{&scanner, nullptr, nullptr};
+      exigir(oxinfraparse(&ctx) != 0, "parser não pode aceitar programas vazios ou incompletos");
       ++casos;
     }
     std::cout << casos << " casos léxicos aprovados\n";

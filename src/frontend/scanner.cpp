@@ -5,7 +5,7 @@ int oxinfralex_init_extra(oxente::ContextoLexico*, void**);
 int oxinfralex_destroy(void*);
 void oxinfraset_in(FILE*, void*);
 int oxinfralex(OXINFRASTYPE*, OXINFRALTYPE*, void*);
-
+namespace oxente { struct ParserContext; }
 namespace oxente {
 void ContextoLexico::avancar(OXINFRALTYPE* local, const char* dados, int tamanho) {
   local->first_line = linha;
@@ -104,4 +104,25 @@ std::string representar(const std::string& texto) {
   }
   return saida + "\"";
 }
+
+int Scanner::proximo_significativo(OXINFRASTYPE* valor, OXINFRALTYPE* local) {
+  for (;;) {
+    int tok = proximo(valor, local);
+    if (tok == ESPACO) {
+      delete valor->texto;
+      valor->texto = nullptr;
+      continue;
+    }
+    return tok;
+  }
+}
+
+std::unique_ptr<ProgramNode> parse(Scanner& scanner, DiagnosticEngine* engine) {
+  ParserContext ctx{&scanner, engine, nullptr};
+  if (::oxinfraparse(&ctx) != 0) {
+    return nullptr;
+  }
+  return std::move(ctx.raiz);
+}
 }  // namespace oxente
+

@@ -4,6 +4,10 @@
 #include <cstdio>
 #include <stdexcept>
 #include <string>
+#include <memory>
+
+// Forward declarations da AST
+class ProgramNode;
 
 namespace oxente {
 // Posições com base 1, fim exclusivo; tabulação avança uma coluna de origem.
@@ -27,12 +31,18 @@ class Scanner {
   ~Scanner();
   Scanner(const Scanner&) = delete;
   Scanner& operator=(const Scanner&) = delete;
+
   int proximo(OXINFRASTYPE* valor, OXINFRALTYPE* local);
+  int proximo_significativo(OXINFRASTYPE* valor, OXINFRALTYPE* local);
   void* instancia() const { return scanner_; }
+
  private:
   ContextoLexico contexto_;
   void* scanner_ = nullptr;
 };
+
 const char* nome_token(int token);
 std::string representar(const std::string& texto);
+
+std::unique_ptr<ProgramNode> parse(Scanner& scanner, DiagnosticEngine* engine = nullptr);
 }  // namespace oxente

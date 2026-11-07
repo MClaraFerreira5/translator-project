@@ -2,6 +2,7 @@
 #include "../common/SourceLocation.hpp"
 using oxente::SourceLocation;
 
+using oxente::SourceLocation;
 class AstVisitor;
 
 class AstNode
