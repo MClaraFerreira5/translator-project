@@ -1,3 +1,4 @@
+.vscode/
 # Diretórios locais de compilação e IDEs
 /build/
 /cmake-build-*/
@@ -25,3 +26,6 @@ lex.yy.cpp
 *.tab.h
 *.tab.hh
 *.output
+
+# Arquivos de teste e cobertura
+tests/
