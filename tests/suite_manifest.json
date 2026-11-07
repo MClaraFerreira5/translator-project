@@ -1,0 +1,320 @@
+[
+  {
+    "id": "val-calculo",
+    "arquivo": "examples/valid/calculo.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["precedencia", "aritmetica", "parenteses"],
+    "descricao": "Multiplicacao antes de soma e agrupamento por parenteses",
+    "resultado_esperado": "Exibe 14 e 20 com legendas correspondentes",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-comentarios",
+    "arquivo": "examples/valid/comentarios.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "lexica",
+    "topicos": ["textos_comentarios", "literais_texto", "comentarios"],
+    "descricao": "Comentarios de linha e bloco e palavras reservadas literais dentro de resenha",
+    "resultado_esperado": "Exibe 'primeiramente espia arriba'",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "val-decisao",
+    "arquivo": "examples/valid/decisao.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["condicionais", "logica", "operadores_relacionais", "precedencia"],
+    "descricao": "Condicao papo, ou, e, negação ai_dento e ramos",
+    "resultado_esperado": "Exibe 'Acesso permitido'",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-ramos",
+    "arquivo": "examples/valid/ramos.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["condicionais", "se_num_for", "pois_pronto"],
+    "descricao": "Condicional com se_num_for e bloco proprio",
+    "resultado_esperado": "Exibe 'Recuperacao'",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-reais",
+    "arquivo": "examples/valid/reais.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["promocao_tipo", "virgula_decimal", "divisao_real"],
+    "descricao": "Promocao de inteiro para tronxo e divisao real",
+    "resultado_esperado": "Exibe 3,500 e 2,500 com tres casas decimais",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-repeticao",
+    "arquivo": "examples/valid/repeticao.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["repeticao", "laco_ate", "acumulacao"],
+    "descricao": "num_para ate com condicao de parada booleana",
+    "resultado_esperado": "Exibe 15",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-precedencia-potencia",
+    "arquivo": "examples/valid/precedencia-potencia.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["precedencia", "potencia", "associatividade_direita", "unario"],
+    "descricao": "Potencia com associatividade a direita e maior precedencia que unario e multiplicacao",
+    "resultado_esperado": "Calcula 2 ** 3 ** 2 = 512,000; -2 ** 2 = -4,000; 3 * 2 ** 3 = 24,000",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-precedencia-logica",
+    "arquivo": "examples/valid/precedencia-logica.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["precedencia", "logica", "operadores_relacionais", "ai_dento"],
+    "descricao": "Precedencia ai_dento > e > ou e relacionais antes de logicos",
+    "resultado_esperado": "Calcula resultados booleanos conforme tabela de precedencia",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-operadores-longos",
+    "arquivo": "examples/valid/operadores-longos.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["operadores_longos", "relacionais", "divisao_inteira", "potencia", "condicionais"],
+    "descricao": "Uso de >=, <=, ==, !=, //, **, ai_dento, se_num_for, pois_pronto",
+    "resultado_esperado": "Reconhecimento correto e execucao do ramo verdadeiro",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-nl-crlf-eof",
+    "arquivo": "examples/valid/nl-crlf-eof.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "lexica",
+    "topicos": ["nl", "quebras_de_linha", "comentarios", "linhas_vazias"],
+    "descricao": "Linhas vazias consecutivas, comentarios e termino sem quebra final no EOF",
+    "resultado_esperado": "Tokenizacao valida sem rejeitar quebras e sem exigir newline final",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "val-aninhamento",
+    "arquivo": "examples/valid/aninhamento.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["construcoes_aninhadas", "repeticao", "condicionais", "blocos"],
+    "descricao": "Condicionais e ramos aninhados dentro de repeticao num_para",
+    "resultado_esperado": "Execucao correta dos blocos aninhados exibindo 32",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-escopo-independente",
+    "arquivo": "examples/valid/escopo-independente.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["escopos", "reutilizacao_nome", "blocos_independentes"],
+    "descricao": "Reutilizacao de mesmo nome em blocos irmaos apos encerramento de visibilidade",
+    "resultado_esperado": "Compilacao valida e execucao exibindo 10 e 20",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-lexico-caractere",
+    "arquivo": "examples/invalid/lexico-caractere.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "lexica",
+    "topicos": ["caracteres_invalidos", "lexico"],
+    "descricao": "Caractere '@' invalido na linguagem",
+    "resultado_esperado": "Interrupcao na etapa lexica indicando caractere nao reconhecido",
+    "causa_tecnica": "caractere não reconhecido",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "inval-lexico-texto-nao-terminado",
+    "arquivo": "examples/invalid/lexico-texto-nao-terminado.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "lexica",
+    "topicos": ["textos_comentarios", "texto_nao_terminado", "lexico"],
+    "descricao": "Literal de texto iniciado com vei e sem tendeu",
+    "resultado_esperado": "Interrupcao na etapa lexica indicando texto nao terminado",
+    "causa_tecnica": "texto não terminado",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "inval-lexico-comentario-nao-terminado",
+    "arquivo": "examples/invalid/lexico-comentario-nao-terminado.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "lexica",
+    "topicos": ["textos_comentarios", "comentario_nao_terminado", "lexico"],
+    "descricao": "Comentario multilinha iniciado com espia e sem arriba no EOF",
+    "resultado_esperado": "Interrupcao na etapa lexica indicando comentario nao terminado",
+    "causa_tecnica": "comentário não terminado",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "inval-sintatico-operando",
+    "arquivo": "examples/invalid/sintatico-operando.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": ["erros_gramatica", "operando_ausente", "sintatico"],
+    "descricao": "Falta expressao apos operando '+' antes do final de linha",
+    "resultado_esperado": "Interrupcao na etapa sintatica com diagnostico de erro gramatical",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-parentese-desbalanceado",
+    "arquivo": "examples/invalid/sintatico-parentese-desbalanceado.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": ["erros_gramatica", "delimitadores", "parenteses"],
+    "descricao": "Condicao de vai_que sem fechar parenteses ')'",
+    "resultado_esperado": "Interrupcao na etapa sintatica por parentese desbalanceado",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-bloco-nao-fechado",
+    "arquivo": "examples/invalid/sintatico-bloco-nao-fechado.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": ["erros_gramatica", "blocos", "arremata_ausente"],
+    "descricao": "Bloco iniciado por bora sem fechamento arremata",
+    "resultado_esperado": "Interrupcao na etapa sintatica por bloco nao fechado",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-comparacao-encadeada",
+    "arquivo": "examples/invalid/sintatico-comparacao-encadeada.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": ["erros_gramatica", "comparacao_encadeada", "relacionais"],
+    "descricao": "Comparacao encadeada 1 < 2 < 3 proibida pela gramatica",
+    "resultado_esperado": "Interrupcao na etapa sintatica rejeitando operadores relacionais em sequencia",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-tipo-sem-identificador",
+    "arquivo": "examples/invalid/sintatico-tipo-sem-identificador.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": ["erros_gramatica", "declaracao_invalida", "sintatico"],
+    "descricao": "Declaracao com tipo seguido de bota sem identificador da variavel",
+    "resultado_esperado": "Interrupcao na etapa sintatica por falta de identificador",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-nao-declarado",
+    "arquivo": "examples/invalid/semantico-nao-declarado.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["declaracao_antes_uso", "tabela_simbolos", "semantico"],
+    "descricao": "Uso de identificador ausente sem declaracao previa",
+    "resultado_esperado": "Interrupcao na etapa semantica com nome_nao_declarado",
+    "causa_tecnica": "nome_nao_declarado",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-uso-proprio-inicializador",
+    "arquivo": "examples/invalid/semantico-uso-proprio-inicializador.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["declaracao_antes_uso", "inicializacao", "semantico"],
+    "descricao": "Variavel usada na expressao do seu proprio inicializador antes de estar visivel",
+    "resultado_esperado": "Interrupcao na etapa semantica com nome_nao_declarado",
+    "causa_tecnica": "nome_nao_declarado",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-tipo",
+    "arquivo": "examples/invalid/semantico-tipo.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["tipos_incompativeis", "conversao_implicita", "semantico"],
+    "descricao": "Atribuicao de tronxo para inteiro sem conversao implicita",
+    "resultado_esperado": "Interrupcao na etapa semantica com misturou_as_coisas",
+    "causa_tecnica": "misturou_as_coisas",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-operacao-tipo",
+    "arquivo": "examples/invalid/semantico-operacao-tipo.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["tipos_incompativeis", "operadores_aritmeticos", "semantico"],
+    "descricao": "Operacao de adicao entre inteiro e resenha",
+    "resultado_esperado": "Interrupcao na etapa semantica com misturou_as_coisas",
+    "causa_tecnica": "misturou_as_coisas",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-duplicacao",
+    "arquivo": "examples/invalid/semantico-duplicacao.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["duplicacao", "tabela_simbolos", "mesmo_escopo"],
+    "descricao": "Redeclaracao do mesmo identificador no mesmo escopo",
+    "resultado_esperado": "Interrupcao na etapa semantica com valor_sem_pe_nem_cabeca",
+    "causa_tecnica": "valor_sem_pe_nem_cabeca",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-sombreamento",
+    "arquivo": "examples/invalid/semantico-sombreamento.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["escopos", "duplicacao", "sombreamento_proibido"],
+    "descricao": "Redeclaracao em bloco interno de variavel ja visivel no bloco externo",
+    "resultado_esperado": "Interrupcao na etapa semantica com valor_sem_pe_nem_cabeca",
+    "causa_tecnica": "valor_sem_pe_nem_cabeca",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-escopo-fechado",
+    "arquivo": "examples/invalid/semantico-escopo-fechado.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["escopos", "visibilidade", "bloco_encerrado"],
+    "descricao": "Acesso a variavel declarada em bloco ja finalizado por arremata",
+    "resultado_esperado": "Interrupcao na etapa semantica com nome_nao_declarado",
+    "causa_tecnica": "nome_nao_declarado",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-condicao-nao-booleana",
+    "arquivo": "examples/invalid/semantico-condicao-nao-booleana.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["condicoes_nao_booleanas", "vai_que", "semantico"],
+    "descricao": "Condicao do vai_que usando inteiro 1 em vez de papo",
+    "resultado_esperado": "Interrupcao na etapa semantica por tipo esperado papo",
+    "causa_tecnica": "misturou_as_coisas",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-condicao-repeticao-nao-booleana",
+    "arquivo": "examples/invalid/semantico-condicao-repeticao-nao-booleana.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["condicoes_nao_booleanas", "repeticao", "semantico"],
+    "descricao": "Condicao de parada de num_para ate usando inteiro em vez de papo",
+    "resultado_esperado": "Interrupcao na etapa semantica por tipo esperado papo",
+    "causa_tecnica": "misturou_as_coisas",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-semantico-contexto",
+    "arquivo": "examples/invalid/semantico-contexto.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "semantica",
+    "topicos": ["contexto_laco", "canso_simbora", "semantico"],
+    "descricao": "Instrucao canso utilizada fora de laco de repeticao",
+    "resultado_esperado": "Interrupcao na etapa semantica por comando fora de laco",
+    "causa_tecnica": "contexto_invalido",
+    "status_implementacao": "pendente_card"
+  }
+]

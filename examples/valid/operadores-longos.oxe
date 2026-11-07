@@ -1,0 +1,18 @@
+inteiro a bota 10
+inteiro b bota 3
+papo ge bota a >= b
+papo le bota b <= a
+papo eq bota a == 10
+papo ne bota a != b
+inteiro div_int bota a // b
+tronxo pot bota a ** 2
+papo neg bota ai_dento (a == b)
+vai_que (ge e eq) bora
+    desembucha(div_int)
+arremata
+se_num_for (le ou ne) bora
+    desembucha(b)
+arremata
+pois_pronto bora
+    desembucha(a)
+arremata

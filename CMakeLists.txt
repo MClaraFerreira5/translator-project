@@ -45,4 +45,9 @@ if(BUILD_TESTING)
   add_executable(teste-diagnosticos tests/teste_diagnosticos.cpp)
   target_include_directories(teste-diagnosticos PRIVATE src/common)
   add_test(NAME diagnosticos COMMAND teste-diagnosticos)
+  add_test(NAME suite COMMAND "${CMAKE_COMMAND}"
+  -DOXENTE=$<TARGET_FILE:oxente>
+  -DTOKENS=$<TARGET_FILE:oxente-tokens>
+  -DFONTE=${CMAKE_CURRENT_SOURCE_DIR}
+  -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/suite.cmake")
 endif()
