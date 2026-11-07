@@ -8,3 +8,8 @@ struct SourceLocation {
 };
 
 } 
+struct SourceLocation
+{
+    int line{0};
+    int column{0};
+};
