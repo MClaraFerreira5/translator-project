@@ -3,7 +3,7 @@
 As regras desta consolidação derivam da [versão entregue](references/definicao-entregue.md).
 A mudança de destino para Python 3 é uma decisão posterior explícita do grupo,
 registrada na OX-01; a proposta histórica permanece preservada.
-A proposta foi aprovada e o tradutor está em implementação; o
+A proposta foi aprovada e o núcleo do tradutor está implementado; o
 [estado por etapa](../README.md#estado-atual) mostra o que já existe. Regras
 descritas aqui são compromissos documentais; esboços e lacunas são identificados.
 Consulte a [procedência das fontes](references/README.md).

@@ -61,15 +61,15 @@ Em conformidade com as diretrizes do projeto, os testes reportam o estado real d
 
 1. **Etapa Léxica (Aprovada - 100%)**:
    - O scanner Flex (`oxente-tokens`) valida com precisão tanto os casos válidos (palavras canônicas, literais, comentários, quebras) quanto a detecção de caracteres inválidos e delimitações incompletas.
-2. **Etapa Sintática e Semântica (Limitação Conhecida - Em desenvolvimento)**:
-   - O compilador CLI (`oxente --check`) atualmente retorna código `4` (`não implementado`) para a árvore AST e tabela de símbolos em integração.
-   - A suíte identifica essas execuções como `[LIMITAÇÃO CONHECIDA]`, documentando que os testes estão prontos e aguardando a finalização dos cards de parser e análise semântica.
+2. **Etapa Sintática e Semântica (Aprovada)**:
+   - `oxente --check` valida os casos do catálogo; `tests/test_semantic.cpp` (teste `semantic` no CTest) confere tipos e contextos com ASTs manuais.
 3. **Runtime Python (Aprovado)**:
    - Os helpers de execução e comportamento de operadores/erros de execução são verificados independentemente via `tests/test_runtime.py` (teste `runtime` no CTest).
 4. **Gerador Python (Aprovado, sem parser)**:
    - `tests/test_codegen.cpp` (teste `codegen` no CTest) monta ASTs manualmente, gera o Python, executa-o com Python 3 e compara a saída. Cobre expressões, tipos, nomes internos, condicionais, laços aninhados, `canso`, `simbora` e escopos.
 5. **Parser (Aprovado)**:
    - `tests/teste_parser.cpp` (teste `parser` no CTest) confere a AST construída, precedência, associatividade, localização, quebras de linha, blocos, condicionais, laços e rejeição de entradas inválidas.
-6. **Pipeline a partir de `.oxe` (Aprovado, fora da CLI)**:
+6. **Pipeline a partir de `.oxe` (Aprovado)**:
    - `tests/teste_pipeline.cpp` (teste `pipeline` no CTest) confere a saída de `--dump-ast` e passa a mesma AST pela análise de escopos e pelo gerador, executando os programas válidos do catálogo e os casos de fluxo de controle.
-   - A suíte acima continua usando `oxente --check`, que retorna `4` até a integração da CLI.
+7. **Ponta a ponta pela CLI (Aprovado)**:
+   - `tests/e2e.py` (teste `e2e` no CTest) traduz com `oxente --emit-python`, executa o `.py` em uma pasta isolada e compara stdout, stderr e código de saída. Cobre os exemplos válidos, entrada/saída, erros de execução, `arrodeia` com `simbora`, escopos, divisão negativa e o diagnóstico de todos os casos inválidos.

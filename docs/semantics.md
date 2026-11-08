@@ -9,7 +9,8 @@ Consulte a [gramática](grammar.md) e os [casos de referência](../examples/READ
 `oxente::SemanticAnalyzer`, em `src/semantic/SemanticAnalyzer.hpp`, recebe uma
 AST por `no.accept(analisador)`. O visitante verifica nomes, tipos e contexto de
 laços; não avalia expressões nem gera Python. Os tipos resolvidos ficam em
-`ExprNode::tipo_calculado`. A CLI ainda não chama esse analisador.
+`ExprNode::tipo_calculado`. A CLI chama esse analisador em `--check` e
+`--emit-python`; `--dump-ast` faz apenas a análise sintática.
 
 Todos os argumentos de saída são percorridos na ordem da AST. Uma declaração
 sem inicializador é rejeitada na posição da declaração com
@@ -29,9 +30,18 @@ geração. A reutilização do visitante após exceção ainda não tem contrato
 o consumidor deve descartá-lo nessa situação.
 
 As matrizes pendentes de comparação, os detalhes de `arrodeia` e os metadados
-adicionais para o gerador não são definidos por esta API. Os testes `semantic`
+adicionais para o gerador não são definidos por esta API. O gerador mantém seu
+próprio ambiente de nomes e tipos ao percorrer a AST validada. Os testes `semantic`
 usam ASTs manuais; as regressões de integração em `parser` exercitam também
 `oxente::parse` seguido pelo analisador.
+
+| Regra | Estado |
+| --- | --- |
+| Declaração antes do uso, inicializador antes do nome, duplicação, sombreamento e nome de bloco encerrado | Implementado em `SemanticAnalyzer` e `SymbolTable` |
+| Tipos dos operadores, atribuições e condições `papo` | Implementado em `SemanticAnalyzer` |
+| `canso`/`simbora` fora de laço | Implementado em `SemanticAnalyzer` (`contexto_invalido`) |
+| Zero em `/`, `//`, `%`, domínio de `**` e entrada inválida ou ausente | Implementado no runtime, com código de erro e linha |
+| Faixas numéricas de `inteiro` e `tronxo` | Não definido e não verificado |
 
 ## Declaração, inicialização e escopo
 
@@ -65,7 +75,9 @@ de laço. A persistência de associações para o gerador depende de integraçã
 
 As regras numéricas de promoção orientam a leitura da tabela; a matriz exata de
 comparações (inclusive igualdade de textos/booleanos) não foi explicitada na
-fonte. Os exemplos usam comparação entre inteiros. Não inferir suporte a ordenar
+fonte. Os exemplos usam comparação entre inteiros. A implementação aceita, de forma
+provisória, igualdade entre números ou valores do mesmo tipo, e ordenação só entre
+números. Não inferir suporte a ordenar
 textos ou comparar tipos distintos. Não há concatenação: `+` é numérico.
 
 Não são aceitas conversões implícitas de `tronxo` para `inteiro`, de texto para
@@ -145,8 +157,8 @@ arremata
 ```
 
 Os arquivos em [examples](../examples/README.md) isolam outras falhas e resultados
-esperados. O teste `pipeline` traduz e executa os válidos e confere dois erros de
-escopo; erros de tipo e de contexto de laço ainda não são detectados.
+esperados. O teste `e2e` traduz e executa os válidos e confere o diagnóstico dos
+inválidos.
 
 ## Extensão futura de funções
 

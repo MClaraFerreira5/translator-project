@@ -1,9 +1,8 @@
 # Exemplos
 
 Os arquivos `.oxe` são classificados por leitura da
-[especificação](../docs/language-spec.md). O teste `pipeline` traduz e executa os
-casos válidos e confere alguns inválidos; os demais aguardam a análise de tipos e a
-integração da CLI.
+[especificação](../docs/language-spec.md). O teste `e2e` traduz e executa os casos
+válidos e confere o diagnóstico dos inválidos.
 Os três primeiros casos válidos derivam do §7 da
 [fonte entregue](../docs/references/definicao-entregue.md), com tabulações verticais
 substituídas por quebras de linha LF reais somente nestas cópias derivadas.
@@ -38,8 +37,8 @@ uma comparação de saída byte a byte. Não há exemplos válidos de funções,
 
 ## Casos inválidos independentes
 
-Cada arquivo isola um erro. A análise futura deve parar no primeiro erro,
-emitir diagnóstico com localização e impedir a geração de código.
+Cada arquivo isola um erro. A análise para no primeiro erro, emite diagnóstico com
+localização e impede a geração de código.
 
 | Arquivo | Etapa esperada | Falha e diagnóstico esperado |
 | --- | --- | --- |

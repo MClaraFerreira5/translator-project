@@ -1,14 +1,18 @@
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include "ast/AstPrinter.hpp"
+#include "codegen/PythonGenerator.hpp"
 #include "common/Diagnostic.hpp"
 #include "common/DiagnosticEngine.hpp"
 #include "frontend/scanner.hpp"
+#include "oxente_runtime_embutido.hpp"
+#include "semantic/SemanticAnalyzer.hpp"
 
 namespace {
 struct FecharArquivo {
@@ -21,14 +25,14 @@ int erro(const std::string& mensagem, int codigo = 2) {
 void ajuda() {
     std::cout << "Uso: oxente MODO arquivo.oxe [-o caminho]\n"
                  "  --help                 Exibe esta ajuda (usado sozinho).\n"
-                 "  --check                Validação: não implementado.\n"
+                 "  --check                Valida o programa, sem gerar código.\n"
                  "  --dump-ast             Exibe a AST como texto indentado.\n"
-                 "  --emit-python          Tradução Python 3: não implementado.\n"
+                 "  --emit-python          Gera Python 3 em stdout, ou no caminho de -o.\n"
                  "  -o, --output caminho   Saída exclusiva de --emit-python.\n"
                  "Exija um único modo e um arquivo .oxe; não há modo padrão.\n"
                  "Use -- antes de caminhos iniciados por hífen.\n"
-                 "Os modos pendentes falham sem gerar arquivos.\n"
-                 "Códigos: 0 sucesso; 1 erro no programa; 2 argumentos; 3 entrada; 4 não implementado.\n";
+                 "Programas inválidos não geram arquivos.\n"
+                 "Códigos: 0 sucesso; 1 erro no programa; 2 argumentos; 3 entrada ou saída.\n";
 }
 }
 int main(int argc, char* argv[]) {
@@ -66,27 +70,50 @@ int main(int argc, char* argv[]) {
     std::error_code ec;
     if (!std::filesystem::is_regular_file(caminho, ec))
         return erro("entrada inexistente ou não é arquivo regular: " + entrada, 3);
+    if (tem_saida && std::filesystem::equivalent(caminho, caminho_saida, ec))
+        return erro("a saída não pode ser o próprio arquivo de entrada.", 2);
     std::unique_ptr<FILE, FecharArquivo> fonte(std::fopen(entrada.c_str(), "rb"));
     if (!fonte) return erro("não foi possível abrir a entrada: " + entrada, 3);
     // Prepara o motor de diagnóstico para o arquivo atual
     oxente::DiagnosticEngine engine(entrada, true); // true = para no primeiro erro
 
     try {
-        // --check e --emit-python ainda não invocam o parser nem abrem a saída.
-        if (modo != "--dump-ast") {
-            return erro(modo + ": não implementado; nenhum programa foi analisado ou traduzido.", 4);
-        }
-
         oxente::Scanner scanner(fonte.get());
         const auto programa = oxente::parse(scanner, &engine);
         if (!programa) return 1;
 
-        // Só escreve em stdout depois que o programa inteiro foi aceito.
-        std::ostringstream texto;
-        oxente::AstPrinter impressora(texto);
-        programa->accept(impressora);
-        std::cout << texto.str();
+        // Toda saída é preparada antes de ser escrita, para que um erro não deixe
+        // resultado parcial nem altere um arquivo de saída já existente.
+        if (modo == "--dump-ast") {
+            std::ostringstream texto;
+            oxente::AstPrinter impressora(texto);
+            programa->accept(impressora);
+            std::cout << texto.str();
+            return 0;
+        }
+
+        oxente::SemanticAnalyzer analise(&engine);
+        programa->accept(analise);
+        if (analise.tem_erros) return 1;
+
+        if (modo == "--check") {
+            std::cout << entrada << ": programa valido\n";
+            return 0;
+        }
+
+        oxente::PythonGenerator gerador;
+        const std::string codigo = gerador.gerar(*programa, oxente::RUNTIME_PYTHON);
+        if (!tem_saida) {
+            std::cout << codigo;
+            return 0;
+        }
+        std::ofstream arquivo_saida(caminho_saida, std::ios::binary);
+        arquivo_saida << codigo;
+        if (!arquivo_saida.flush()) return erro("não foi possível escrever a saída: " + caminho_saida, 3);
         return 0;
+
+    } catch (const oxente::ErroGeracao& falha) {
+        return erro(std::string("erro interno do tradutor: ") + falha.what(), 1);
 
     } catch (const oxente::ErroLexico& falha) {
         const oxente::SourceLocation local{falha.local.first_line, falha.local.first_column};
@@ -98,14 +125,8 @@ int main(int argc, char* argv[]) {
         // std::stoi/std::stod na construção dos literais; os limites da linguagem estão pendentes.
         return erro("literal numérico fora da faixa suportada.", 1);
 
-    } catch (const oxente::DiagnosticException& diag) {
-        // CRITÉRIO DE ACEITE: "Garantir que erro impeça a emissão de Python válido"
-        // Se houve erro e um arquivo de saída já tinha sido criado, apague-o!
-        if (tem_saida && !caminho_saida.empty() && std::filesystem::exists(caminho_saida)) {
-            std::filesystem::remove(caminho_saida);
-        }
-
-        // Retorna 1 = Erro de compilação/tradução
+    } catch (const oxente::DiagnosticException&) {
+        // O motor já escreveu o diagnóstico; nenhum Python foi emitido.
         return 1;
     }
 }

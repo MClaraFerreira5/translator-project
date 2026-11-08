@@ -6,9 +6,9 @@ usando **Flex** para análise léxica e **Bison** para análise sintática.
 
 ## Estado atual
 
-Parser, AST, escopos e gerador já funcionam juntos a partir de código `.oxe`, como
-mostra o teste `pipeline`. **A CLI ainda não traduz arquivos**: só `--dump-ast` está
-ligado; `--check` e `--emit-python` dependem da OX-15.
+O núcleo da linguagem está implementado: a CLI valida arquivos `.oxe` e gera Python 3
+para os programas válidos. Veja como [gerar e executar Python](#gerar-e-executar-python)
+e as [limitações conhecidas](#limitações-conhecidas).
 
 | Etapa | Estado | Onde |
 | --- | --- | --- |
@@ -16,13 +16,12 @@ ligado; `--check` e `--emit-python` dependem da OX-15.
 | Scanner Flex | Implementado | `src/frontend/infra.l`, `oxente-tokens` |
 | AST e contrato Visitor | Implementado | `src/ast/` |
 | Diagnósticos | Implementado | `src/common/` |
-| Tabela de símbolos e escopos | Implementado, fora da CLI | `src/semantic/` |
-| Gerador Python 3 | Implementado, testado com ASTs manuais | `src/codegen/` |
+| Tabela de símbolos, escopos, tipos e contexto de laços | Implementado | `src/semantic/` |
+| Gerador Python 3 | Implementado | `src/codegen/` |
 | Runtime Python | Implementado | `src/runtime/oxente_runtime.py` |
 | Parser do núcleo, com blocos, condicionais e laços | Implementado | `src/frontend/infra.y` |
 | Visualização da AST (`--dump-ast`) | Implementado | `src/ast/AstPrinter.cpp` |
-| Análise de tipos e contexto de laços | Planejado | OX-09 |
-| `--check`, `--emit-python` | Planejado; respondem "não implementado" | OX-15 |
+| `--check`, `--emit-python` | Implementado | `src/main.cpp` |
 | Funções e procedimentos | Não suportado; extensão após o núcleo | `aperreio`, `toma`, `sem_futuro` |
 | `liso` e `balaio`, vetores, IR, otimizações | Não suportado | — |
 
@@ -76,10 +75,9 @@ aceita a pasta de build como argumento. O mesmo script é usado pela CI em
 CMake exige as ferramentas e informa dependências ausentes. A configuração dentro
 da árvore fonte é rejeitada: use sempre `-B build`. Fontes e headers gerados
 ficam em `build/generated/`; não devem ser versionados. Para refazer do zero,
-use uma nova pasta de build. CTest verifica a CLI, o scanner, os diagnósticos, a
-AST, os escopos, o gerador, o runtime e a configuração/compilação em uma árvore
-limpa separada. Veja a [suíte de testes](docs/test-suite.md). Os exemplos `.oxe`
-continuam referências manuais, sem validação de ponta a ponta.
+use uma nova pasta de build. CTest verifica cada etapa, a tradução de ponta a ponta
+e a configuração/compilação em uma árvore limpa separada. Veja a
+[suíte de testes](docs/test-suite.md).
 
 ## Preparação no Windows (WSL 2 + Ubuntu)
 
@@ -142,32 +140,29 @@ incompatíveis, múltiplas entradas e argumentos ausentes são erros.
 
 | Opção | Contrato e estado |
 | --- | --- |
-| `--check` | Validação futura; não implementado |
+| `--check` | Valida o programa, sem gerar código |
 | `--dump-ast` | Exibe a AST como texto indentado em stdout, sem análise semântica |
-| `--emit-python` | Emissão futura de Python 3; não implementado |
-| `-o caminho`, `--output caminho` | Opcional, uma única vez e somente com `--emit-python`; não abre nem escreve saída nesta etapa |
+| `--emit-python` | Gera Python 3 em stdout ou no caminho de `-o` |
+| `-o caminho`, `--output caminho` | Opcional, uma única vez e somente com `--emit-python`; não pode ser a própria entrada |
 
 Caminhos de saída iniciados por hífen devem usar `./nome`. A sintaxe
-`--output=caminho` não é suportada. O destino futuro sem `-o` permanece pendente;
-`--check` e `--emit-python` sempre falham explicitamente, sem gerar arquivos nem
-invocar o parser. A existência/extensão da entrada é conferida antes
-de informar a capacidade pendente; isso não valida seu conteúdo.
+`--output=caminho` não é suportada. A escrita em stdout quando não há `-o` é uma
+escolha provisória.
 
 | Código | Significado |
 | --- | --- |
 | 0 | Ajuda ou AST exibida em stdout |
-| 1 | Erro léxico ou sintático no programa |
+| 1 | Erro léxico, sintático ou semântico no programa |
 | 2 | Erro de argumentos/uso, incluindo extensão inválida |
-| 3 | Entrada inexistente, não regular ou impossível de abrir |
-| 4 | Funcionalidade não implementada |
+| 3 | Entrada inexistente, não regular ou impossível de abrir; saída impossível de escrever |
 
 Erros vão para stderr, sem saída normal em stdout. São códigos iniciais da CLI,
 sem antecipar a padronização de diagnósticos da OX-10. Por exemplo:
 
 ```bash
-./build/oxente --check examples/valid/calculo.oxe
-# stderr: oxente: --check: não implementado; nenhum programa foi analisado ou traduzido.
-# código de saída: 4
+./build/oxente --check examples/invalid/semantico-tipo.oxe
+# stderr: oxente [semântico]: examples/invalid/semantico-tipo.oxe:2:1: erro 'misturou_as_coisas': ...
+# código de saída: 1
 ```
 
 `--dump-ast` mostra um nó por linha, e a indentação indica os filhos. Um `.oxe` com
@@ -186,28 +181,16 @@ Programa
 
 ## Gerar e executar Python
 
-Enquanto a CLI não está integrada, `--emit-python` não gera arquivos.
-O gerador é usado como biblioteca, a partir de uma AST validada:
-
-```cpp
-oxente::PythonGenerator gerador;
-std::string codigo_python = gerador.gerar(programa); // programa: ProgramNode&
-```
-
-O módulo gerado importa `oxente_runtime`, então esse arquivo precisa estar ao lado
-do programa ou no `PYTHONPATH`:
-
 ```bash
-PYTHONPATH=src/runtime python3 programa.py
+./build/oxente --emit-python examples/valid/calculo.oxe -o calculo.py
+python3 calculo.py
+# Resultado 14
+# Com parenteses 20
 ```
 
-Para ver programas gerados de verdade, rode o teste do gerador e abra os `.py`
-produzidos. Eles têm duas linhas iniciais, próprias do teste, que localizam o runtime:
-
-```bash
-ctest --test-dir build -R "codegen|pipeline" --output-on-failure
-ls build/teste-codegen-saida/*.py build/teste-pipeline-saida/*.py
-```
+Sem `-o`, o Python vai para stdout. O `.py` gerado já contém o runtime, então roda
+sozinho, sem `PYTHONPATH` nem outros arquivos. Só programas válidos geram saída, e um
+arquivo de saída já existente é preservado quando o programa tem erro.
 
 ## Scanner e inspeção de tokens (OX-04)
 
@@ -310,6 +293,20 @@ construída. O teste manual da AST também conserva o construtor de saída com u
 argumento. Espaços significativos e comentários de bloco no meio de expressões
 continuam pendentes; o estado da CLI está registrado na tabela de etapas acima.
 
+## Limitações conhecidas
+
+- As regras que a especificação deixa em aberto foram implementadas de forma
+  provisória: veja a [lista](docs/architecture.md#gerador-python-3-ox-11-e-ox-12) e
+  a [gramática](docs/grammar.md#estado-da-implementação).
+- Literais `inteiro` precisam caber em um `int` de C++; acima disso a CLI responde com
+  erro. As faixas numéricas da linguagem ainda não foram definidas nem são verificadas
+  durante a execução.
+- `tronxo` usa o arredondamento padrão de Python ao exibir três casas decimais.
+- Erros de execução informam a linha, sem coluna.
+- Em build nativo no Windows com MSYS2, o teste `lexer_harness` falha; a rota
+  documentada para Windows é o WSL.
+- Funções, procedimentos, `liso`, `balaio` e vetores não são suportados.
+
 ## Escopo
 
 O núcleo prioritário para **12/11/2026** contempla expressões aritméticas, variáveis,
@@ -356,8 +353,8 @@ IR separada da AST, backend de máquina e otimizações não são requisitos do 
 Leia a [especificação consolidada](docs/language-spec.md), o
 [catálogo de tokens](docs/tokens.md), o [esboço de gramática](docs/grammar.md),
 as [regras semânticas](docs/semantics.md) e a [arquitetura](docs/architecture.md).
-Os [exemplos e resultados esperados](examples/README.md) são referências manuais;
-ainda não foram executados de ponta a ponta por um tradutor.
+Os [exemplos e resultados esperados](examples/README.md) são verificados pelos
+testes de ponta a ponta.
 
 As [fontes e sua procedência](docs/references/README.md) estão preservadas para
 consulta. Colaboradores e agentes devem ler [AGENTS.md](AGENTS.md) e

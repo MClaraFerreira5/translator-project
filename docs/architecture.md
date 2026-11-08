@@ -1,10 +1,7 @@
 # Arquitetura
 
-**Implementado:** build CMake, CLI com `--dump-ast`, scanner Flex, parser do núcleo,
-AST, Visitor, diagnósticos, tabela de símbolos com análise de escopos, gerador
-Python 3 e runtime.
-**Planejado:** análise de tipos e de contexto de laços, e a ligação de `--check` e
-`--emit-python`. Por isso a CLI ainda não traduz arquivos `.oxe`. Veja o
+**Implementado:** o pipeline completo do núcleo, da CLI à execução do Python gerado.
+**Não suportado:** funções, procedimentos, `liso`, `balaio` e vetores. Veja o
 [estado por etapa](../README.md#estado-atual) e o
 [contrato da CLI e build](../README.md#contrato-da-cli-ox-02).
 
@@ -42,14 +39,14 @@ tem uma lista de argumentos, `abs` é um `UnaryOp` e `//` é `BinaryOp::DivisaoI
 do ramo anterior.
 
 `AstVisitor` declara um `visit` por tipo de nó, e cada nó despacha em `accept`.
-Há três visitantes de produção: `ScopeVisitor`, `PythonGenerator` e `AstPrinter`, que
-implementa `--dump-ast`. O teste `pipeline` passa a mesma AST pelos três.
+Os visitantes de produção são `SemanticAnalyzer`, `PythonGenerator` e `AstPrinter`, que
+implementa `--dump-ast`. A CLI passa a mesma AST de um para o outro, sem reconstruí-la.
 
 `SymbolTable` mantém a pilha de escopos, com nome, tipo, localização e nível de cada
 símbolo, e rejeita sombreamento. `ScopeVisitor` abre um escopo por bloco e outro
-envolvendo o `arrodeia`. O campo `tipo_calculado` das expressões só é preenchido em
-literais, pois a análise de tipos é planejada. Por isso o gerador deduz os tipos
-de que precisa a partir da declaração das variáveis e da tabela de operadores.
+envolvendo o `arrodeia`. `SemanticAnalyzer` aplica as mesmas regras de escopo, confere
+tipos e o contexto de `canso`/`simbora` e preenche `tipo_calculado` nas expressões. O
+gerador deduz por conta própria os tipos de que precisa, com a mesma tabela de operadores.
 
 ## Responsabilidades das pastas
 
@@ -82,11 +79,10 @@ Os helpers de divisão e potência recebem a linha `.oxe` para os diagnósticos.
 
 ## Gerador Python 3 (OX-11 e OX-12)
 
-`src/codegen/PythonGenerator` traduz uma AST validada para Python 3. É testado com
-ASTs manuais em `tests/test_codegen.cpp` e a partir de código `.oxe` em
-`tests/teste_pipeline.cpp`; ambos executam os programas gerados.
-Ainda não está ligado à CLI: `--emit-python` depende da integração do pipeline (OX-15). O programa gerado importa
-`oxente_runtime`, que precisa estar ao lado dele ou no `PYTHONPATH`. Uma AST que
+`src/codegen/PythonGenerator` traduz uma AST validada para Python 3. A CLI embute o
+conteúdo de `src/runtime/oxente_runtime.py` no módulo gerado, que roda sozinho; o CMake
+transforma esse arquivo em um header durante a configuração. Sem o runtime embutido, o
+módulo importa `oxente_runtime`, forma usada nos testes do gerador. Uma AST que
 viole o contrato, como nome não declarado, gera `ErroGeracao`: é erro interno do
 tradutor, e não diagnóstico para o usuário.
 
@@ -103,8 +99,8 @@ tradutor, e não diagnóstico para o usuário.
 **Escolhas provisórias, a confirmar com o grupo:** um espaço entre argumentos de
 `desembucha` (única referência é `Resultado 14`, no exemplo 4.1 da proposta);
 curto-circuito de `e`/`ou`, herdado de Python; `canso` sem atualização; escopo
-próprio envolvendo o `arrodeia`, como em `ScopeVisitor`; truncamento para zero
-em `//` e `%`, já adotado pelo runtime.
+próprio envolvendo o `arrodeia`; truncamento para zero em `//` e `%`; igualdade
+permitida entre números ou entre valores do mesmo tipo, e ordenação só entre números.
 
 ## Riscos da tradução para Python 3
 
@@ -129,8 +125,8 @@ regras da Oxente Lang.
 | Tabela de símbolos e escopos | Concluído |
 | Gerador Python 3 e runtime, com ASTs manuais | Concluído |
 | Parser Bison do núcleo e `--dump-ast` | Concluído |
-| Análise de tipos e de contexto de laços | Planejado |
-| Ligação de `--check` e `--emit-python` na CLI | Planejado |
+| Análise de tipos e de contexto de laços | Concluído |
+| Ligação de `--check` e `--emit-python` na CLI e testes de ponta a ponta | Concluído |
 | Confirmar as lacunas de [tokens](tokens.md), [gramática](grammar.md) e [semântica](semantics.md) | Em aberto |
 | Funções e procedimentos | Somente após o núcleo funcional |
 

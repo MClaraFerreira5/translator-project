@@ -1,0 +1,6 @@
+#pragma once
+
+// Gerado pelo CMake a partir de src/runtime/oxente_runtime.py. Não edite.
+namespace oxente {
+inline const char* const RUNTIME_PYTHON = R"OXERUNTIME(@RUNTIME_PYTHON@)OXERUNTIME";
+}

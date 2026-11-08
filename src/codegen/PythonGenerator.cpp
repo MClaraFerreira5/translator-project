@@ -23,10 +23,9 @@ enum Precedencia {
     PrecAtomo
 };
 
-const char* const CABECALHO =
-    "# Gerado pelo tradutor Oxente Lang. Nao edite manualmente.\n"
-    "from oxente_runtime import _ox_desembucha, _ox_diga_ai, _ox_div, _ox_div_int, _ox_mod, _ox_pot\n"
-    "\n";
+const char* const CABECALHO = "# Gerado pelo tradutor Oxente Lang. Nao edite manualmente.\n";
+const char* const IMPORTACAO =
+    "from oxente_runtime import _ox_desembucha, _ox_diga_ai, _ox_div, _ox_div_int, _ox_mod, _ox_pot\n";
 
 template <typename Ponteiro>
 Ponteiro* exigir(Ponteiro* ponteiro, const char* descricao) {
@@ -91,8 +90,10 @@ TypeKind tipoAritmetico(TypeKind esquerda, TypeKind direita) {
 
 } // namespace
 
-std::string PythonGenerator::gerar(ProgramNode& programa) {
+std::string PythonGenerator::gerar(ProgramNode& programa, const std::string& runtime_embutido) {
     saida_ = CABECALHO;
+    saida_ += runtime_embutido.empty() ? IMPORTACAO : runtime_embutido;
+    saida_ += "\n\n";
     nivel_ = 0;
     escopos_.clear();
     ocorrencias_.clear();

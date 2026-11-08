@@ -40,7 +40,7 @@ O código gerado pelo Bison não é a AST.
 Percursos da AST usam `AstVisitor`; IR separada e otimizações não são obrigatórias.
 Mantenha responsabilidades de `src/*` delimitadas e considere o runtime para
 preservar regras próprias, evitando herdar acidentalmente a semântica de Python.
-Ao mudar a AST ou os operadores, atualize `ScopeVisitor` e `PythonGenerator`.
+Ao mudar a AST ou os operadores, atualize todos os visitantes de `AstVisitor`.
 
 Ao alterar uma regra confirmada, atualize especificação, tokens, gramática,
 semântica e exemplos afetados. Verifique links e diferencie comportamento

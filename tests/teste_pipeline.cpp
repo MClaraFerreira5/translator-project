@@ -1,5 +1,5 @@
 // Testes de ponta a ponta a partir de código .oxe: parser -> AST -> visualização
-// -> escopos -> gerador -> execução com Python 3, sempre sobre a mesma AST.
+// -> análise semântica -> gerador -> execução com Python 3, sempre sobre a mesma AST.
 //
 // Uso: teste-pipeline <python> <raiz-do-projeto> <dir-temporario>
 
@@ -17,7 +17,7 @@
 #include "ast/AstPrinter.hpp"
 #include "codegen/PythonGenerator.hpp"
 #include "frontend/scanner.hpp"
-#include "semantic/ScopeVisitor.hpp"
+#include "semantic/SemanticAnalyzer.hpp"
 
 namespace {
 
@@ -93,8 +93,8 @@ void executa(const std::string& nome, const std::string& codigo, const std::stri
 
     const std::string antes = visualizar(*programa);
     oxente::DiagnosticEngine engine(nome, true);
-    oxente::ScopeVisitor escopos(&engine);
-    programa->accept(escopos);
+    oxente::SemanticAnalyzer analise(&engine);
+    programa->accept(analise);
     oxente::PythonGenerator gerador;
     const std::string python = gerador.gerar(*programa);
     if (visualizar(*programa) != antes) return falha(nome, "as etapas alteraram a AST");
@@ -115,9 +115,9 @@ void rejeita_escopo(const std::string& arquivo) {
     if (!programa) return falha(arquivo, "parser rejeitou o programa");
     try {
         oxente::DiagnosticEngine engine(arquivo, true);
-        oxente::ScopeVisitor escopos(&engine);
-        programa->accept(escopos);
-        falha(arquivo, "analise de escopos aceitou o programa");
+        oxente::SemanticAnalyzer analise(&engine);
+        programa->accept(analise);
+        falha(arquivo, "analise semantica aceitou o programa");
     } catch (const oxente::DiagnosticException&) {
     }
 }

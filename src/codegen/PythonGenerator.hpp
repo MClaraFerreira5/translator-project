@@ -35,7 +35,9 @@ public:
 class PythonGenerator : public AstVisitor {
 public:
     // Retorna o módulo Python completo. Lança ErroGeracao se a AST for inválida.
-    std::string gerar(ProgramNode& programa);
+    // Com runtime_embutido, o módulo inclui esse código em vez de importar
+    // oxente_runtime e pode ser executado sozinho.
+    std::string gerar(ProgramNode& programa, const std::string& runtime_embutido = "");
 
     void visit(ProgramNode& node) override;
     void visit(BlockStmtNode& node) override;
