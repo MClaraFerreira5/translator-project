@@ -316,5 +316,61 @@
     "resultado_esperado": "Interrupcao na etapa semantica por comando fora de laco",
     "causa_tecnica": "contexto_invalido",
     "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "val-lacos-aninhados",
+    "arquivo": "examples/valid/lacos-aninhados.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": [
+      "aninhamento",
+      "arrodeia",
+      "canso_simbora"
+    ],
+    "descricao": "Laco num_para dentro de arrodeia com canso e simbora",
+    "resultado_esperado": "Exibe 4",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-ramo-sem-vai-que",
+    "arquivo": "examples/invalid/sintatico-ramo-sem-vai-que.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": [
+      "erros_gramatica",
+      "condicionais"
+    ],
+    "descricao": "Ramo se_num_for sem vai_que anterior",
+    "resultado_esperado": "Erro sintatico na linha 1",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-arrodeia-sem-ate",
+    "arquivo": "examples/invalid/sintatico-arrodeia-sem-ate.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": [
+      "erros_gramatica",
+      "arrodeia"
+    ],
+    "descricao": "Campo de parada de arrodeia sem ate",
+    "resultado_esperado": "Erro sintatico na linha 1",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
+  },
+  {
+    "id": "inval-sintatico-bora-sem-quebra",
+    "arquivo": "examples/invalid/sintatico-bora-sem-quebra.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": [
+      "erros_gramatica",
+      "blocos"
+    ],
+    "descricao": "Instrucao na mesma linha de bora",
+    "resultado_esperado": "Erro sintatico na linha 1",
+    "causa_tecnica": "erro_sintatico",
+    "status_implementacao": "pendente_card"
   }
 ]

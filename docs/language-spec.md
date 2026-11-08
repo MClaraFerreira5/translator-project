@@ -85,7 +85,8 @@ Cada ramo possui bloco próprio. `se_num_for` exige condição e completa um
 `num_para ate (condicao) bora` testa uma **condição de parada** antes de executar
 o corpo: se ela for `evera`, encerra; o corpo pode executar zero vezes.
 `arrodeia` também prevê inicialização, condição de parada com `ate` e atualização,
-separadas por `;`. Sua gramática detalhada permanece pendente.
+separadas por `;`. O parser aceita `arrodeia (inicio; ate condicao; atualizacao)`,
+forma ainda a confirmar na [gramática](grammar.md).
 `canso` interrompe e `simbora` pula uma repetição; só são aceitos dentro de laços.
 
 ## Entrada, saída, textos e comentários

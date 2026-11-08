@@ -107,22 +107,30 @@ std::string representar(const std::string& texto) {
 int Scanner::proximo_significativo(OXINFRASTYPE* valor, OXINFRALTYPE* local) {
   for (;;) {
     int tok = proximo(valor, local);
-    if (tok == ESPACO) {
-      delete valor->texto;
-      valor->texto = nullptr;
-      continue;
-    }
-    // A API bruta preserva todos os lexemas para oxente-tokens. Para o
-    // Bison, só estas categorias transportam texto; os demais tokens não
-    // têm valor semântico e são liberados antes de entrar na pilha.
     switch (tok) {
-      case IDENT: case INTEIRO: case REAL: case TEXTO: case NL:
-        break;
+      case 0:
+        // EOF encerra a última instrução: o parser sempre recebe uma quebra final.
+        if (!quebra_final_pendente_) return 0;
+        quebra_final_pendente_ = false;
+        valor->texto = new std::string();
+        return NL;
+      case NL:
+        quebra_final_pendente_ = false;
+        return tok;  // A ação da gramática libera o lexema.
+      case IDENT:
+      case INTEIRO:
+      case REAL:
+      case TEXTO:
+        quebra_final_pendente_ = true;
+        return tok;  // As ações da gramática movem ou liberam o lexema.
       default:
+        // Palavras reservadas e operadores não têm valor semântico no parser.
         delete valor->texto;
         valor->texto = nullptr;
+        if (tok == ESPACO) break;
+        quebra_final_pendente_ = true;
+        return tok;
     }
-    return tok;
   }
 }
 

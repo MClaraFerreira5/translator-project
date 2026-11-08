@@ -34,12 +34,14 @@ class Scanner {
   Scanner& operator=(const Scanner&) = delete;
 
   int proximo(OXINFRASTYPE* valor, OXINFRALTYPE* local);
+  // Para o parser: descarta espaços e entrega uma quebra de linha antes do EOF.
   int proximo_significativo(OXINFRASTYPE* valor, OXINFRALTYPE* local);
   void* instancia() const { return scanner_; }
 
  private:
   ContextoLexico contexto_;
   void* scanner_ = nullptr;
+  bool quebra_final_pendente_ = false;
 };
 
 const char* nome_token(int token);

@@ -6,9 +6,9 @@ usando **Flex** para análise léxica e **Bison** para análise sintática.
 
 ## Estado atual
 
-As etapas abaixo existem separadamente. **Ainda não é possível traduzir um arquivo
-`.oxe` de ponta a ponta**, porque o parser não está concluído e a CLI não está
-ligada às etapas seguintes.
+Parser, AST, escopos e gerador já funcionam juntos a partir de código `.oxe`, como
+mostra o teste `pipeline`. **A CLI ainda não traduz arquivos**: só `--dump-ast` está
+ligado; `--check` e `--emit-python` dependem da OX-15.
 
 | Etapa | Estado | Onde |
 | --- | --- | --- |
@@ -19,9 +19,10 @@ ligada às etapas seguintes.
 | Tabela de símbolos e escopos | Implementado, fora da CLI | `src/semantic/` |
 | Gerador Python 3 | Implementado, testado com ASTs manuais | `src/codegen/` |
 | Runtime Python | Implementado | `src/runtime/oxente_runtime.py` |
-| Parser Bison | Planejado; `infra.y` não tem produções da linguagem | OX-05 a OX-07 |
+| Parser do núcleo, com blocos, condicionais e laços | Implementado | `src/frontend/infra.y` |
+| Visualização da AST (`--dump-ast`) | Implementado | `src/ast/AstPrinter.cpp` |
 | Análise de tipos e contexto de laços | Planejado | OX-09 |
-| `--check`, `--dump-ast`, `--emit-python` | Planejado; respondem "não implementado" | OX-15 |
+| `--check`, `--emit-python` | Planejado; respondem "não implementado" | OX-15 |
 | Funções e procedimentos | Não suportado; extensão após o núcleo | `aperreio`, `toma`, `sem_futuro` |
 | `liso` e `balaio`, vetores, IR, otimizações | Não suportado | — |
 
@@ -142,19 +143,20 @@ incompatíveis, múltiplas entradas e argumentos ausentes são erros.
 | Opção | Contrato e estado |
 | --- | --- |
 | `--check` | Validação futura; não implementado |
-| `--dump-ast` | Visualização futura da AST; não implementado |
+| `--dump-ast` | Exibe a AST como texto indentado em stdout, sem análise semântica |
 | `--emit-python` | Emissão futura de Python 3; não implementado |
 | `-o caminho`, `--output caminho` | Opcional, uma única vez e somente com `--emit-python`; não abre nem escreve saída nesta etapa |
 
 Caminhos de saída iniciados por hífen devem usar `./nome`. A sintaxe
 `--output=caminho` não é suportada. O destino futuro sem `-o` permanece pendente;
-esta versão sempre falha explicitamente nos três modos, sem gerar arquivos nem
-invocar o parser provisório. A existência/extensão da entrada é conferida antes
+`--check` e `--emit-python` sempre falham explicitamente, sem gerar arquivos nem
+invocar o parser. A existência/extensão da entrada é conferida antes
 de informar a capacidade pendente; isso não valida seu conteúdo.
 
 | Código | Significado |
 | --- | --- |
-| 0 | Ajuda exibida em stdout |
+| 0 | Ajuda ou AST exibida em stdout |
+| 1 | Erro léxico ou sintático no programa |
 | 2 | Erro de argumentos/uso, incluindo extensão inválida |
 | 3 | Entrada inexistente, não regular ou impossível de abrir |
 | 4 | Funcionalidade não implementada |
@@ -168,9 +170,23 @@ sem antecipar a padronização de diagnósticos da OX-10. Por exemplo:
 # código de saída: 4
 ```
 
+`--dump-ast` mostra um nó por linha, e a indentação indica os filhos. Um `.oxe` com
+`inteiro r bota 2 + 3 * 4` gera:
+
+```text
+Programa
+  Bloco
+    Declaracao inteiro r
+      Binario +
+        Literal inteiro 2
+        Binario *
+          Literal inteiro 3
+          Literal inteiro 4
+```
+
 ## Gerar e executar Python
 
-Enquanto o parser e a CLI não estão integrados, `--emit-python` não gera arquivos.
+Enquanto a CLI não está integrada, `--emit-python` não gera arquivos.
 O gerador é usado como biblioteca, a partir de uma AST validada:
 
 ```cpp
@@ -189,8 +205,8 @@ Para ver programas gerados de verdade, rode o teste do gerador e abra os `.py`
 produzidos. Eles têm duas linhas iniciais, próprias do teste, que localizam o runtime:
 
 ```bash
-ctest --test-dir build -R codegen --output-on-failure
-ls build/teste-codegen-saida/*.py
+ctest --test-dir build -R "codegen|pipeline" --output-on-failure
+ls build/teste-codegen-saida/*.py build/teste-pipeline-saida/*.py
 ```
 
 ## Scanner e inspeção de tokens (OX-04)
@@ -216,28 +232,26 @@ intervalo `linha:coluna-linha:coluna` e lexema entre aspas, com caracteres de
 controle escapados **na saída de inspeção**. Isso não define escapes da linguagem.
 Códigos: 0 tokenização concluída, 1 erro léxico ou caso documental pendente,
 2 uso incorreto, 3 falha de abertura/leitura. Tokenização concluída não é validação
-sintática/semântica. A CLI `oxente` mantém os três modos não implementados.
+sintática/semântica.
 
 A integração conserva o esqueleto C do Bison e o scanner C do Flex compilados
 como C++17, sem `libfl`, com prefixo `oxinfra`. O scanner agora é reentrante e o
-parser usa `api.pure full`, `%locations` e `oxente::ParserContext*`.
-`src/frontend/infra.y` é a fonte única dos tokens e contém o parser parcial
-da OX-05, acessível pela API descrita abaixo.
+parser usa `api.pure full`, `%locations` e o parâmetro `ParserContext*`.
+`src/frontend/infra.y` é a fonte única dos tokens. `oxente::parse` constrói a AST
+do núcleo da linguagem; entrada vazia ou só com linhas vazias é rejeitada.
 
 `oxente::Scanner` em `src/frontend/scanner.hpp` encapsula o estado Flex e empresta
 o `FILE*` do consumidor. Cada token não EOF entrega um `std::string*` em
-`OXINFRASTYPE::texto`: **o consumidor deve liberá-lo**. O Bison já declara
-`%destructor` e ações que liberam os textos recebidos. Na interface do parser,
-`proximo_significativo` elimina espaços e libera os lexemas de palavras e
-operadores sem valor semântico; os demais passam às ações ou aos destruidores.
-Na API bruta `proximo`, todos os lexemas são preservados,
+`OXINFRASTYPE::texto`: **o consumidor deve liberá-lo**. No parser, as ações movem
+ou liberam esses valores, e `proximo_significativo` libera os tokens que não
+carregam valor. Todos os lexemas são preservados,
 inclusive zeros iniciais, vírgula decimal e delimitadores de texto, sem converter
 para `int`/`double` nem fixar limites numéricos ou espaços de borda do valor textual.
 
 Localizações começam em 1 e usam fim exclusivo. Cada byte ASCII e cada tabulação
 avançam uma coluna de origem; CRLF avança uma linha, como LF. EOF tem intervalo
-vazio no cursor e não cria `NL` artificial: o parser o aceita como
-término da última instrução. `ErroLexico` carrega intervalo e mensagem; a análise
+vazio no cursor e `proximo` não cria `NL` artificial; `proximo_significativo`, usado
+pelo parser, entrega uma quebra antes do EOF para encerrar a última instrução. `ErroLexico` carrega intervalo e mensagem; a análise
 para no primeiro erro e o consumidor deve abandonar essa instância do scanner.
 
 Como espaços significativos e o tratamento sintático de comentários permanecem
@@ -262,7 +276,7 @@ sua utilização será decidida pelo parser. As reservadas da extensão
 
 Os testes de lexer conferem tokens, lexemas, início/fim, reservadas, operadores,
 LF/CRLF/EOF, comentários, textos e falhas. Também exercitam instâncias isoladas,
-rejeição de entradas vazias/incompletas pelo parser e códigos/canais do harness. As pendências
+rejeição de entrada vazia ou incompleta pelo parser e códigos/canais do harness. As pendências
 continuam em [tokens](docs/tokens.md#pontos-a-confirmar); a OX-04 não as resolve.
 
 ## Parser de expressões e comandos simples (OX-05)
@@ -280,7 +294,8 @@ O subconjunto aceita declarações inicializadas dos quatro tipos, atribuições
 exigem LF ou CRLF; linhas vazias são aceitas e EOF termina o último comando.
 Expressões não continuam em outra linha. Programa e bloco principal recebem a
 posição do primeiro comando, ignorando linhas iniciais vazias. Entrada vazia
-continua inválida. Condicionais, laços e funções não são reconhecidos nesta etapa.
+continua inválida. A OX-06 estende esse subconjunto com condicionais e laços;
+funções continuam fora do núcleo.
 
 A AST atual armazena números como `int` e `double`. A conversão preserva a vírgula
 decimal na origem; literais que não cabem nessa representação produzem diagnóstico
@@ -292,9 +307,8 @@ do sinal. As operações são representadas em nós, sem avaliação pelo parser
 Os testes `parser` e `scope` exercitam a API real, incluindo agrupamentos da AST,
 términos, argumentos de saída, localização e falhas com pilha parcialmente
 construída. O teste manual da AST também conserva o construtor de saída com um
-argumento. A CLI, espaços significativos e comentários de bloco no meio de
-expressões permanecem fora desta integração; as pendências documentais continuam
-válidas.
+argumento. Espaços significativos e comentários de bloco no meio de expressões
+continuam pendentes; o estado da CLI está registrado na tabela de etapas acima.
 
 ## Escopo
 

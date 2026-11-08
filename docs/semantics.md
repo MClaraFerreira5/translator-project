@@ -145,7 +145,8 @@ arremata
 ```
 
 Os arquivos em [examples](../examples/README.md) isolam outras falhas e resultados
-esperados. Só a etapa léxica os verifica; ainda não passam pela análise semântica.
+esperados. O teste `pipeline` traduz e executa os válidos e confere dois erros de
+escopo; erros de tipo e de contexto de laço ainda não são detectados.
 
 ## Extensão futura de funções
 

@@ -23,7 +23,7 @@ target_include_directories(oxente_frontend PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend"
   )
-add_executable(oxente src/main.cpp)
+add_executable(oxente src/main.cpp src/ast/AstPrinter.cpp)
 target_link_libraries(oxente PRIVATE oxente_frontend)
 add_executable(oxente-tokens src/frontend/tokens_main.cpp)
 target_link_libraries(oxente-tokens PRIVATE oxente_frontend)
@@ -76,4 +76,11 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_runtime.py")
   add_executable(teste-ast-manual tests/test_manual_ast.cpp)
   add_test(NAME ast_manual COMMAND teste-ast-manual)
+  add_executable(teste-pipeline tests/teste_pipeline.cpp src/ast/AstPrinter.cpp
+    src/codegen/PythonGenerator.cpp)
+  target_link_libraries(teste-pipeline PRIVATE oxente_frontend)
+  target_include_directories(teste-pipeline PRIVATE src src/common src/ast src/semantic)
+  add_test(NAME pipeline COMMAND teste-pipeline "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/teste-pipeline-saida")
+  set_tests_properties(pipeline PROPERTIES TIMEOUT 120)
 endif()

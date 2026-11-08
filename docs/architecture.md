@@ -1,10 +1,10 @@
 # Arquitetura
 
-**Implementado:** build CMake, CLI, scanner Flex, AST, Visitor, diagnósticos,
-tabela de símbolos com análise de escopos, gerador Python 3 e runtime.
-**Planejado:** parser Bison, análise de tipos e de contexto de laços, e a ligação
-das etapas na CLI. O parser atual é provisório e rejeita qualquer entrada, então
-ainda não há tradução de ponta a ponta. Veja o
+**Implementado:** build CMake, CLI com `--dump-ast`, scanner Flex, parser do núcleo,
+AST, Visitor, diagnósticos, tabela de símbolos com análise de escopos, gerador
+Python 3 e runtime.
+**Planejado:** análise de tipos e de contexto de laços, e a ligação de `--check` e
+`--emit-python`. Por isso a CLI ainda não traduz arquivos `.oxe`. Veja o
 [estado por etapa](../README.md#estado-atual) e o
 [contrato da CLI e build](../README.md#contrato-da-cli-ox-02).
 
@@ -42,7 +42,8 @@ tem uma lista de argumentos, `abs` é um `UnaryOp` e `//` é `BinaryOp::DivisaoI
 do ramo anterior.
 
 `AstVisitor` declara um `visit` por tipo de nó, e cada nó despacha em `accept`.
-Há dois visitantes de produção: `ScopeVisitor` e `PythonGenerator`.
+Há três visitantes de produção: `ScopeVisitor`, `PythonGenerator` e `AstPrinter`, que
+implementa `--dump-ast`. O teste `pipeline` passa a mesma AST pelos três.
 
 `SymbolTable` mantém a pilha de escopos, com nome, tipo, localização e nível de cada
 símbolo, e rejeita sombreamento. `ScopeVisitor` abre um escopo por bloco e outro
@@ -69,7 +70,8 @@ A OX-02 acrescenta `src/main.cpp`, integração mínima em `src/frontend/`,
 Artefatos ficam na árvore de build ignorada pelo Git.
 A OX-04 implementa o scanner em `infra.l`, tokens e contrato mínimo em `infra.y`,
 encapsulamento em `scanner.hpp`/`scanner.cpp` e inspeção em `tokens_main.cpp`.
-`infra.y` ainda não implementa a gramática da linguagem. O [contrato do scanner](../README.md#scanner-e-inspeção-de-tokens-ox-04)
+As OX-05 e OX-06 acrescentam a `infra.y` as expressões, os comandos, os blocos, os
+condicionais e os laços, com `oxente::parse` como ponto de entrada. O [contrato do scanner](../README.md#scanner-e-inspeção-de-tokens-ox-04)
 documenta propriedade de valores, localizações e limitações para OX-05/OX-07.
 
 O runtime trata vírgula e três casas decimais na saída de `tronxo`, `papo` como
@@ -80,10 +82,10 @@ Os helpers de divisão e potência recebem a linha `.oxe` para os diagnósticos.
 
 ## Gerador Python 3 (OX-11 e OX-12)
 
-`src/codegen/PythonGenerator` traduz uma AST validada para Python 3 e é testado
-com ASTs manuais em `tests/test_codegen.cpp`, que executa os programas gerados.
-Ainda não está ligado à CLI: `--emit-python` depende do parser completo (OX-05 a
-OX-07) e da integração do pipeline (OX-15). O programa gerado importa
+`src/codegen/PythonGenerator` traduz uma AST validada para Python 3. É testado com
+ASTs manuais em `tests/test_codegen.cpp` e a partir de código `.oxe` em
+`tests/teste_pipeline.cpp`; ambos executam os programas gerados.
+Ainda não está ligado à CLI: `--emit-python` depende da integração do pipeline (OX-15). O programa gerado importa
 `oxente_runtime`, que precisa estar ao lado dele ou no `PYTHONPATH`. Uma AST que
 viole o contrato, como nome não declarado, gera `ErroGeracao`: é erro interno do
 tradutor, e não diagnóstico para o usuário.
@@ -126,9 +128,9 @@ regras da Oxente Lang.
 | Lexer Flex e testes | Concluído |
 | Tabela de símbolos e escopos | Concluído |
 | Gerador Python 3 e runtime, com ASTs manuais | Concluído |
-| Parser Bison e construção da AST, com verificação de conflitos | Em andamento |
+| Parser Bison do núcleo e `--dump-ast` | Concluído |
 | Análise de tipos e de contexto de laços | Planejado |
-| Ligação das etapas na CLI e testes de ponta a ponta | Planejado |
+| Ligação de `--check` e `--emit-python` na CLI | Planejado |
 | Confirmar as lacunas de [tokens](tokens.md), [gramática](grammar.md) e [semântica](semantics.md) | Em aberto |
 | Funções e procedimentos | Somente após o núcleo funcional |
 

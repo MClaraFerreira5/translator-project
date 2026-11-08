@@ -1,8 +1,9 @@
-# Exemplos para validação futura
+# Exemplos
 
-Os arquivos `.oxe` são referências documentais, classificados por leitura da
-[especificação](../docs/language-spec.md). **Não foram executados ou validados
-automaticamente por um tradutor Oxente Lang**, pois ele ainda não existe.
+Os arquivos `.oxe` são classificados por leitura da
+[especificação](../docs/language-spec.md). O teste `pipeline` traduz e executa os
+casos válidos e confere alguns inválidos; os demais aguardam a análise de tipos e a
+integração da CLI.
 Os três primeiros casos válidos derivam do §7 da
 [fonte entregue](../docs/references/definicao-entregue.md), com tabulações verticais
 substituídas por quebras de linha LF reais somente nestas cópias derivadas.
@@ -26,12 +27,14 @@ linha. `valid/` e `invalid/` indicam expectativas para testes futuros.
 | [nl-crlf-eof.oxe](valid/nl-crlf-eof.oxe)	| Múltiplas linhas vazias, comentários e término no EOF |	Reconhecimento correto de quebras de linha e separação de instruções
 | [aninhamento.oxe](valid/aninhamento.oxe)	| Condicionais vai_que / se_num_for aninhados em laço num_para	| Execução estruturada de múltiplos níveis de blocos exibindo 32
 | [escopo-independente.oxe](valid/escopo-independente.oxe)	| Reutilização de nomes em blocos irmãos independentes |	Variável local de bloco encerrado não interfere no bloco seguinte
+| [lacos-aninhados.oxe](valid/lacos-aninhados.oxe) | `num_para` dentro de `arrodeia`, com `canso` e `simbora` | Exibe 4 |
 
 A fonte ilustra o cálculo com `Resultado 14` e `Com parenteses 20` em linhas
 distintas. Isso serve como referência, mas separação exata de argumentos e
 término de saída ainda precisam de contrato explícito. Não se estabelece aqui
-uma comparação de saída byte a byte. Não há exemplos válidos de `arrodeia`,
-funções, `liso` ou `balaio`, cujas regras completas estão pendentes.
+uma comparação de saída byte a byte. Não há exemplos válidos de funções, `liso` ou
+`balaio`, cujas regras completas estão pendentes. A forma de `arrodeia` usada em
+`lacos-aninhados.oxe` ainda precisa ser confirmada pelo grupo.
 
 ## Casos inválidos independentes
 
@@ -52,6 +55,9 @@ emitir diagnóstico com localização e impedir a geração de código.
 | [sintatico-bloco-nao-fechado.oxe](invalid/sintatico-bloco-nao-fechado.oxe) | Sintática | Bloco bora sem o correspondente arremata |
 | [sintatico-comparacao-encadeada.oxe](invalid/sintatico-comparacao-encadeada.oxe) | Sintática | Comparações encadeadas 1 < 2 < 3 proibidas pela gramática |
 | [sintatico-tipo-sem-identificador.oxe](invalid/sintatico-tipo-sem-identificador.oxe) | Sintática | Declaração inteiro bota 5 sem identificador da variável |
+| [sintatico-ramo-sem-vai-que.oxe](invalid/sintatico-ramo-sem-vai-que.oxe) | Sintática | Linha 1: `se_num_for` sem `vai_que` anterior |
+| [sintatico-arrodeia-sem-ate.oxe](invalid/sintatico-arrodeia-sem-ate.oxe) | Sintática | Linha 1: condição de parada de `arrodeia` sem `ate` |
+| [sintatico-bora-sem-quebra.oxe](invalid/sintatico-bora-sem-quebra.oxe) | Sintática | Linha 1: instrução na mesma linha de `bora` |
 | [semantico-uso-proprio-inicializador.oxe](invalid/semantico-uso-proprio-inicializador.oxe) | Semântica | Variável usada no próprio inicializador antes de declarada (x bota x + 1) |
 | [semantico-operacao-tipo.oxe](invalid/semantico-operacao-tipo.oxe) | Semântica | Operação aritmética entre tipos incompatíveis (inteiro + resenha) |
 | [semantico-duplicacao.oxe](invalid/semantico-duplicacao.oxe) | Semântica | Redeclaração da mesma variável no mesmo escopo |
@@ -63,9 +69,7 @@ As descrições expressam o conteúdo esperado do diagnóstico; não inventam c�
 ou redações obrigatórias onde a proposta não os define. Divisão por zero é erro
 de execução, diferente desses erros que impedem a tradução; ver [semântica](../docs/semantics.md).
 
-## Verificações futuras
+## Formato dos arquivos
 
-Quando houver implementação real, incluir reconhecimento léxico, parsing e
-verificação semântica desses casos, além de execução dos programas traduzidos.
-Cobrir LF, CRLF e última linha sem quebra final; nesta etapa os arquivos de
-exemplo usam LF e quebra final. Scripts de teste não são necessários na Sprint 0.
+Os arquivos de exemplo usam LF e quebra final. CRLF e última linha sem quebra final
+são cobertos pelos testes de parser e `pipeline`.

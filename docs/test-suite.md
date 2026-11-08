@@ -68,4 +68,8 @@ Em conformidade com as diretrizes do projeto, os testes reportam o estado real d
    - Os helpers de execução e comportamento de operadores/erros de execução são verificados independentemente via `tests/test_runtime.py` (teste `runtime` no CTest).
 4. **Gerador Python (Aprovado, sem parser)**:
    - `tests/test_codegen.cpp` (teste `codegen` no CTest) monta ASTs manualmente, gera o Python, executa-o com Python 3 e compara a saída. Cobre expressões, tipos, nomes internos, condicionais, laços aninhados, `canso`, `simbora` e escopos.
-   - Os arquivos `.oxe` do catálogo ainda não passam pelo gerador, pois dependem do parser.
+5. **Parser (Aprovado)**:
+   - `tests/teste_parser.cpp` (teste `parser` no CTest) confere a AST construída, precedência, associatividade, localização, quebras de linha, blocos, condicionais, laços e rejeição de entradas inválidas.
+6. **Pipeline a partir de `.oxe` (Aprovado, fora da CLI)**:
+   - `tests/teste_pipeline.cpp` (teste `pipeline` no CTest) confere a saída de `--dump-ast` e passa a mesma AST pela análise de escopos e pelo gerador, executando os programas válidos do catálogo e os casos de fluxo de controle.
+   - A suíte acima continua usando `oxente --check`, que retorna `4` até a integração da CLI.
