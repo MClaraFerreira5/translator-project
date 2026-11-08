@@ -65,4 +65,15 @@ if(BUILD_TESTING)
   target_link_libraries(test-semantic PRIVATE oxente_frontend)
   target_include_directories(test-semantic PRIVATE src src/common src/ast src/semantic)
   add_test(NAME semantic COMMAND test-semantic)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_executable(teste-codegen tests/test_codegen.cpp src/codegen/PythonGenerator.cpp)
+  target_include_directories(teste-codegen PRIVATE src)
+  add_test(NAME codegen COMMAND teste-codegen "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime" "${CMAKE_CURRENT_BINARY_DIR}/teste-codegen-saida")
+  # Um erro na tradução de laços pode gerar um programa que nunca termina.
+  set_tests_properties(codegen PROPERTIES TIMEOUT 120)
+  add_test(NAME runtime COMMAND "${Python3_EXECUTABLE}" -B
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_runtime.py")
+  add_executable(teste-ast-manual tests/test_manual_ast.cpp)
+  add_test(NAME ast_manual COMMAND teste-ast-manual)
 endif()

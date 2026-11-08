@@ -65,4 +65,7 @@ Em conformidade com as diretrizes do projeto, os testes reportam o estado real d
    - O compilador CLI (`oxente --check`) atualmente retorna código `4` (`não implementado`) para a árvore AST e tabela de símbolos em integração.
    - A suíte identifica essas execuções como `[LIMITAÇÃO CONHECIDA]`, documentando que os testes estão prontos e aguardando a finalização dos cards de parser e análise semântica.
 3. **Runtime Python (Aprovado)**:
-   - Os helpers de execução e comportamento de operadores/erros de execução são verificados independentemente via `tests/test_runtime.py`.
+   - Os helpers de execução e comportamento de operadores/erros de execução são verificados independentemente via `tests/test_runtime.py` (teste `runtime` no CTest).
+4. **Gerador Python (Aprovado, sem parser)**:
+   - `tests/test_codegen.cpp` (teste `codegen` no CTest) monta ASTs manualmente, gera o Python, executa-o com Python 3 e compara a saída. Cobre expressões, tipos, nomes internos, condicionais, laços aninhados, `canso`, `simbora` e escopos.
+   - Os arquivos `.oxe` do catálogo ainda não passam pelo gerador, pois dependem do parser.

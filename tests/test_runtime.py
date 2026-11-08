@@ -11,6 +11,18 @@ import oxente_runtime as ox
 class TestOxenteRuntime(unittest.TestCase):
 
     # 1. Testes de formatação de saída
+    def test_desembucha_separa_argumentos_com_espaco(self):
+        with patch("sys.stdout", new_callable=io.StringIO) as saida:
+            ox._ox_desembucha("Resultado", 14, 1.5, True)
+        self.assertEqual(saida.getvalue(), "Resultado 14 1,500 evera\n")
+
+    def test_divisao_inteira_preserva_precisao(self):
+        grande = 10**17 + 3
+        self.assertEqual(ox._ox_div_int(grande, 1), grande)
+        self.assertEqual(ox._ox_div_int(-grande, 1), -grande)
+        self.assertEqual(ox._ox_mod(grande, 10), 3)
+        self.assertEqual(ox._ox_mod(-grande, 10), -3)
+
     def test_formatacao_papo(self):
         self.assertEqual(ox._ox_formatar_valor(True), "evera")
         self.assertEqual(ox._ox_formatar_valor(False), "pala")

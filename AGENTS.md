@@ -5,8 +5,8 @@ A fonte principal é a [definição entregue](docs/references/definicao-entregue
 Preserve mudanças do usuário e registre ambiguidades; não invente decisões.
 Todo material novo deve estar em português brasileiro; código `.oxe` usa ASCII.
 
-Nesta Sprint 0, criar apenas estrutura, documentação e exemplos, sem tradutor,
-build, CLI ou testes executáveis simulados. Evoluções futuras exigem tarefa própria.
+A Sprint 0 foi concluída. Cada evolução exige tarefa própria, sem testes simulados
+nem documentação de funcionalidades inexistentes.
 
 Não fazer `git add` automaticamente. Não fazer commits, pushes ou merges sem
 aprovação explícita do usuário, mesmo quando uma tarefa estiver concluída.

@@ -6,6 +6,22 @@ parcial da OX-05 está em [infra.y](../src/frontend/infra.y) e cobre expressões
 declarações, atribuições, entrada e saída. Os [tokens](tokens.md) e a
 [semântica](semantics.md) complementam as regras de estrutura.
 
+## Estado da implementação
+
+`src/frontend/infra.y` declara os tokens, mas não tem produções da linguagem e
+rejeita qualquer entrada; o parser está em desenvolvimento nas OX-05 a OX-07.
+A AST e o gerador já definem o que o parser deve construir:
+
+| Construção | Representação esperada na AST |
+| --- | --- |
+| `se_num_for` | `IfStmtNode` como único comando do `senao_bloco` do ramo anterior |
+| `pois_pronto` | `senao_bloco` do último ramo |
+| `num_para ate (c)` | `WhileStmtNode`, com `c` como condição de parada |
+| `arrodeia` | `ForStmtNode`, com inicialização, condição de parada, atualização e corpo |
+| `desembucha(a; b)` | `OutputStmtNode` com um item em `argumentos` por expressão |
+| `abs(e)` | `UnaryExprNode` com `UnaryOp::Abs` |
+| Texto | `LiteralExprNode` só com o conteúdo, sem `vei` e `tendeu` |
+
 ## Notação e limites
 
 Aspas representam grafias de tokens; `|` indica alternativa, `[ ]` opcionalidade

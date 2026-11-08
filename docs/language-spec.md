@@ -3,7 +3,8 @@
 As regras desta consolidação derivam da [versão entregue](references/definicao-entregue.md).
 A mudança de destino para Python 3 é uma decisão posterior explícita do grupo,
 registrada na OX-01; a proposta histórica permanece preservada.
-A proposta foi aprovada, mas o tradutor ainda não foi implementado. Regras
+A proposta foi aprovada e o tradutor está em implementação; o
+[estado por etapa](../README.md#estado-atual) mostra o que já existe. Regras
 descritas aqui são compromissos documentais; esboços e lacunas são identificados.
 Consulte a [procedência das fontes](references/README.md).
 
@@ -107,7 +108,7 @@ Veja [tokens](tokens.md) para lacunas relativas a textos e espaços.
 Erros léxicos, sintáticos e semânticos impedem a tradução; a análise encerra no
 primeiro erro. Durante a execução poderão ocorrer divisão por zero, entrada
 inválida/ausente, erros de domínio da potência e resultados numéricos fora das
-faixas válidas. As verificações são futuras; detalhes em [semântica](semantics.md).
+faixas válidas. O estado de cada verificação está em [semântica](semantics.md).
 Os [exemplos](../examples/README.md) incluem cálculo, decisão, laço e casos inválidos.
 
 ## Extensões futuras
@@ -139,7 +140,7 @@ Também precisam de confirmação a formatação de reais com três casas
 (arredondamento), os formatos de entrada e separadores de saída, as faixas e
 a precisão numéricas e as regras completas da extensão de funções. Os
 [riscos do destino Python](architecture.md#riscos-da-tradução-para-python-3)
-orientam os cards futuros sem definir soluções nesta tarefa.
+registram o tratamento atual e o que falta confirmar.
 
 Outras lacunas específicas: [léxico](tokens.md#pontos-a-confirmar),
 [sintaxe](grammar.md#pontos-a-confirmar) e [semântica](semantics.md#pontos-a-confirmar).

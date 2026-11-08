@@ -16,7 +16,8 @@ def _ox_formatar_valor(v):
     return str(v)
 
 def _ox_desembucha(*args):
-    saida = "".join(_ox_formatar_valor(a) for a in args)
+    # Um espaço entre argumentos, como em "Resultado 14" no exemplo 4.1 da proposta.
+    saida = " ".join(_ox_formatar_valor(a) for a in args)
     print(saida)
 
 # 2. Entrada (diga_ai)
@@ -61,19 +62,22 @@ def _ox_div(a, b, linha: int = None):
         _ox_erro("dividiu_por_nada", "Divisão real por zero.", linha)
     return float(a) / float(b)
 
+def _ox_quociente_truncado(a: int, b: int):
+    # Truncamento em direção a zero, somente com inteiros: int(a / b) passaria
+    # por float e perderia precisão em valores acima de 2**53.
+    q = abs(a) // abs(b)
+    return q if (a < 0) == (b < 0) else -q
+
 def _ox_div_int(a: int, b: int, linha: int = None):
     if b == 0:
         _ox_erro("dividiu_por_nada", "Divisão inteira por zero.", linha)
-    # Truncamento em direção a zero (igual C++: int(a / b))
-    # Em Python: int(a / b) trunca em direção a zero para positivos e negativos
-    return int(a / b)
+    return _ox_quociente_truncado(a, b)
 
 def _ox_mod(a: int, b: int, linha: int = None):
     if b == 0:
         _ox_erro("dividiu_por_nada", "Resto de divisão por zero.", linha)
     # Coerente com o quociente truncado: a = (q * b) + r  =>  r = a - (q * b)
-    q = int(a / b)
-    return a - (q * b)
+    return a - (_ox_quociente_truncado(a, b) * b)
 
 def _ox_pot(a, b, linha: int = None):
     try:
