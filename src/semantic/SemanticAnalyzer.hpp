@@ -33,6 +33,32 @@ public:
         }
     }
 
+    void erro_operador(BinaryExprNode& node, const char* exigencia) {
+        const char* operador = "";
+        switch (node.op) {
+            case BinaryOp::Soma: operador = "+"; break;
+            case BinaryOp::Subtracao: operador = "-"; break;
+            case BinaryOp::Multiplicacao: operador = "*"; break;
+            case BinaryOp::Divisao: operador = "/"; break;
+            case BinaryOp::DivisaoInteira: operador = "//"; break;
+            case BinaryOp::Modulo: operador = "%"; break;
+            case BinaryOp::Potencia: operador = "**"; break;
+            case BinaryOp::Menor: operador = "<"; break;
+            case BinaryOp::MenorIgual: operador = "<="; break;
+            case BinaryOp::Maior: operador = ">"; break;
+            case BinaryOp::MaiorIgual: operador = ">="; break;
+            case BinaryOp::Igual: operador = "=="; break;
+            case BinaryOp::Diferente: operador = "!="; break;
+            case BinaryOp::E: operador = "e"; break;
+            case BinaryOp::Ou: operador = "ou"; break;
+        }
+        node.tipo_calculado = TypeKind::Erro;
+        error(node.loc, "misturou_as_coisas",
+              "Operador '" + std::string(operador) + "' exige " + exigencia +
+              "; recebeu '" + to_string(node.esquerda->tipo_calculado) +
+              "' e '" + to_string(node.direita->tipo_calculado) + "'.");
+    }
+
     // --- COMANDOS ---
 
     void visit(ProgramNode& node) override {
@@ -50,20 +76,22 @@ public:
     }
 
     void visit(VarDeclStmtNode& node) override {
+        if (!node.inicializador) {
+            error(node.loc, "inicializador_ausente",
+                  "Declaracao de '" + node.nome + "' exige inicializador.");
+            return;
+        }
         // 1. Analisa inicializador antes de registrar o nome (impede x bota x + 1)
-        TypeKind tipo_init = TypeKind::Indefinido;
-        if (node.inicializador) {
-            node.inicializador->accept(*this);
-            tipo_init = node.inicializador->tipo_calculado;
+        node.inicializador->accept(*this);
+        TypeKind tipo_init = node.inicializador->tipo_calculado;
 
-            // Valida compatibilidade: rejeita conversão implícita inversa (ex: tronxo para inteiro)
-            if (!compatible_types(node.tipo, tipo_init)) {
-                type_error(node.loc, node.tipo, tipo_init);
-            }
+        // Valida compatibilidade: rejeita conversão implícita inversa (ex: tronxo para inteiro)
+        if (tipo_init != TypeKind::Erro && !compatible_types(node.tipo, tipo_init)) {
+            type_error(node.loc, node.tipo, tipo_init);
         }
 
         // 2. Insere na tabela de símbolos
-        if (!tabela.inserir(node.nome, node.tipo, node.loc, node.inicializador != nullptr)) {
+        if (!tabela.inserir(node.nome, node.tipo, node.loc, true)) {
             tem_erros = true;
         }
     }
@@ -76,15 +104,16 @@ public:
 
         if (node.expressao) {
             node.expressao->accept(*this);
-            if (s && !compatible_types(s->tipo, node.expressao->tipo_calculado)) {
+            if (s && node.expressao->tipo_calculado != TypeKind::Erro &&
+                !compatible_types(s->tipo, node.expressao->tipo_calculado)) {
                 type_error(node.loc, s->tipo, node.expressao->tipo_calculado);
             }
         }
     }
 
     void visit(OutputStmtNode& node) override {
-        if (node.expressao) {
-            node.expressao->accept(*this);
+        for (auto& argumento : node.argumentos) {
+            if (argumento) argumento->accept(*this);
         }
     }
 
@@ -166,6 +195,10 @@ public:
         if (!node.operando) return;
         node.operando->accept(*this);
         TypeKind t = node.operando->tipo_calculado;
+        if (t == TypeKind::Erro) {
+            node.tipo_calculado = TypeKind::Erro;
+            return;
+        }
 
         if (node.op == UnaryOp::Positivo || node.op == UnaryOp::Negativo) {
             if (!is_numeric(t)) {
@@ -210,8 +243,7 @@ public:
             case BinaryOp::Subtracao:
             case BinaryOp::Multiplicacao:
                 if (!is_numeric(esq) || !is_numeric(dir)) {
-                    type_error(node.loc, TypeKind::Inteiro, TypeKind::Erro);
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos numericos");
                 } else if (esq == TypeKind::Tronxo || dir == TypeKind::Tronxo) {
                     node.tipo_calculado = TypeKind::Tronxo; // Promoção
                 } else {
@@ -222,8 +254,7 @@ public:
             // Divisão real (/) sempre resulta em tronxo
             case BinaryOp::Divisao:
                 if (!is_numeric(esq) || !is_numeric(dir)) {
-                    type_error(node.loc, TypeKind::Inteiro, TypeKind::Erro);
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos numericos");
                 } else {
                     node.tipo_calculado = TypeKind::Tronxo;
                 }
@@ -232,8 +263,7 @@ public:
             // Potência (**) resulta em tronxo
             case BinaryOp::Potencia:
                 if (!is_numeric(esq) || !is_numeric(dir)) {
-                    error(node.loc, "misturou_as_coisas", "Potencia exige operandos numericos.");
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos numericos");
                 } else {
                     node.tipo_calculado = TypeKind::Tronxo;
                 }
@@ -243,8 +273,7 @@ public:
             case BinaryOp::DivisaoInteira:
             case BinaryOp::Modulo:
                 if (esq != TypeKind::Inteiro || dir != TypeKind::Inteiro) {
-                    type_error(node.loc, TypeKind::Inteiro, TypeKind::Erro);
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos do tipo inteiro");
                 } else {
                     node.tipo_calculado = TypeKind::Inteiro;
                 }
@@ -256,8 +285,7 @@ public:
             case BinaryOp::Maior:
             case BinaryOp::MaiorIgual:
                 if (!is_numeric(esq) || !is_numeric(dir)) {
-                    type_error(node.loc, TypeKind::Inteiro, TypeKind::Erro);
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos numericos");
                 } else {
                     node.tipo_calculado = TypeKind::Papo;
                 }
@@ -271,8 +299,7 @@ public:
                 } else if (esq == dir) {
                     node.tipo_calculado = TypeKind::Papo;
                 } else {
-                    type_error(node.loc, TypeKind::Papo, TypeKind::Erro);
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos de tipos compativeis");
                 }
                 break;
 
@@ -280,8 +307,7 @@ public:
             case BinaryOp::E:
             case BinaryOp::Ou:
                 if (esq != TypeKind::Papo || dir != TypeKind::Papo) {
-                    error(node.loc, "misturou_as_coisas", "Operadores logicos 'e'/'ou' exigem operandos 'papo'.");
-                    node.tipo_calculado = TypeKind::Erro;
+                    erro_operador(node, "operandos do tipo papo");
                 } else {
                     node.tipo_calculado = TypeKind::Papo;
                 }
