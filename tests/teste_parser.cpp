@@ -6,6 +6,7 @@
 #include <memory>
 #include <cassert>
 #include <string>
+#include <sstream>
 
 namespace {
 
@@ -28,17 +29,43 @@ std::unique_ptr<ProgramNode> parse_codigo(const std::string& codigo) {
 }
 
 bool parse_deve_falhar(const std::string& codigo) {
-    try {
+    // Uma exceção inesperada deve falhar o teste, não contar como rejeição.
+    return parse_codigo(codigo) == nullptr;
+}
+
+void exigir(bool condicao, const std::string& mensagem) {
+    if (!condicao) throw std::runtime_error(mensagem);
+}
+
+struct CapturarErros {
+    std::ostringstream saida;
+    std::streambuf* anterior = std::cerr.rdbuf(saida.rdbuf());
+    ~CapturarErros() { std::cerr.rdbuf(anterior); }
+};
+
+void conferir_erro(const std::string& codigo, oxente::Stage etapa,
+                   const std::string& causa, int linha, int coluna) {
+    for (bool parar : {false, true}) {
         auto arq = criar_fonte(codigo);
         oxente::Scanner scanner(arq.get());
-        oxente::DiagnosticEngine engine("invalido.oxe", true);
+        oxente::DiagnosticEngine engine("invalido.oxe", parar);
+        CapturarErros captura;
         auto ast = oxente::parse(scanner, &engine);
-        return ast == nullptr;
-    } catch (const oxente::DiagnosticException&) {
-        return true;
-    } catch (const std::exception&) {
-        return true;
+        exigir(ast == nullptr, "Erro retornou AST parcial");
+        exigir(engine.tem_erros(), "Erro não registrado no motor");
+        const auto mensagem = captura.saida.str();
+        exigir(mensagem.find("[" + std::string(oxente::to_string(etapa)) + "]") != std::string::npos,
+               "Etapa incorreta: " + mensagem);
+        exigir(mensagem.find("invalido.oxe:" + std::to_string(linha) + ":" +
+                             std::to_string(coluna) + ":") != std::string::npos,
+               "Localização incorreta: " + mensagem);
+        exigir(mensagem.find("erro '" + causa + "'") != std::string::npos,
+               "Causa incorreta: " + mensagem);
+        exigir(mensagem.find('\n') == mensagem.size() - 1, "Mais de um diagnóstico emitido");
     }
+    auto arq = criar_fonte(codigo);
+    oxente::Scanner scanner(arq.get());
+    exigir(oxente::parse(scanner) == nullptr, "Erro sem motor retornou AST");
 }
 
 } // namespace
@@ -171,6 +198,73 @@ int main() {
         assert(parse_deve_falhar("inteiro r bota (2 + 3\n"));
     }
 
-    std::cout << "[SUCESSO] Todos os testes do parser passaram perfeitamente!" << std::endl;
+    // 9. Comandos exigem quebra de linha; EOF só termina o último comando.
+    {
+        conferir_erro("diga_ai(x) desembucha(x)", oxente::Stage::Sintatico,
+                      "sintaxe_invalida", 1, 12);
+        conferir_erro("inteiro x bota 1 inteiro y bota 2", oxente::Stage::Sintatico,
+                      "sintaxe_invalida", 1, 18);
+        conferir_erro("inteiro x bota 1 +\n2", oxente::Stage::Sintatico,
+                      "sintaxe_invalida", 1, 19);
+
+        for (const std::string quebra : {"\n", "\r\n"}) {
+            for (const std::string final : {std::string{}, quebra}) {
+                for (const std::string comentario : {"", " primeiramente fim"}) {
+                    for (const std::string primeiro : {"diga_ai(x)", "inteiro x bota 1"}) {
+                        const auto segundo = primeiro == "diga_ai(x)"
+                            ? "desembucha(x; 2,5)" : "inteiro y bota 2";
+                        auto ast = parse_codigo(quebra + primeiro + comentario + quebra +
+                                                quebra + segundo + final);
+                        exigir(ast && ast->bloco_principal->comandos.size() == 2,
+                               "Sequência com término válido rejeitada");
+                    }
+                }
+            }
+        }
+    }
+
+    // 10. Programa e bloco começam no primeiro comando, sem contar linhas vazias.
+    {
+        for (const std::string inicio : {"", "\n", "\r\n\r\n\t"}) {
+            auto ast = parse_codigo(inicio + "inteiro x bota 1");
+            const int linha = inicio.empty() ? 1 : (inicio == "\n" ? 2 : 3);
+            const int coluna = inicio == "\r\n\r\n\t" ? 2 : 1;
+            exigir(ast && ast->loc.line == linha && ast->loc.column == coluna,
+                   "Localização incorreta do programa");
+            exigir(ast->bloco_principal->loc.line == linha &&
+                   ast->bloco_principal->loc.column == coluna,
+                   "Localização incorreta do bloco principal");
+        }
+        conferir_erro("", oxente::Stage::Sintatico, "sintaxe_invalida", 1, 1);
+        conferir_erro("\n\n", oxente::Stage::Sintatico, "sintaxe_invalida", 3, 1);
+    }
+
+    // 11. A conversão respeita int/double da AST e não deixa exceções escaparem.
+    {
+        for (const std::string literal : {std::string("2147483648"),
+                                          std::string(400, '9') + ",0"}) {
+            // Inclui comando anterior e argumentos já construídos na pilha.
+            conferir_erro("inteiro x bota 1\ndesembucha(x; " + literal + ")",
+                          oxente::Stage::Lexico, "literal_fora_da_representacao", 2, 15);
+        }
+        auto ast = parse_codigo("inteiro x bota 2147483647\ntronxo y bota 7,5000");
+        auto* decl = dynamic_cast<VarDeclStmtNode*>(ast->bloco_principal->comandos[1].get());
+        auto* real = dynamic_cast<LiteralExprNode*>(decl->inicializador.get());
+        exigir(real && std::get<double>(real->valor) == 7.5, "Vírgula decimal alterada");
+    }
+
+    // 12. Erros com árvore/pilha parciais e token de antecipação descartado.
+    {
+        conferir_erro("inteiro x bota 1\ndesembucha(x; 2 + )", oxente::Stage::Sintatico,
+                      "sintaxe_invalida", 2, 19);
+        conferir_erro("inteiro x bota 1\ndesembucha(x; 2 3)", oxente::Stage::Sintatico,
+                      "sintaxe_invalida", 2, 17);
+        conferir_erro("inteiro x bota 1\ndesembucha(x; 2 + @)", oxente::Stage::Lexico,
+                      "erro_lexico", 2, 19);
+        conferir_erro("inteiro x bota 1\ndesembucha(vei texto", oxente::Stage::Lexico,
+                      "erro_lexico", 2, 12);
+    }
+
+    std::cout << "[SUCESSO] Testes do parser concluídos." << std::endl;
     return 0;
 }

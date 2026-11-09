@@ -4,10 +4,10 @@ Linguagem educacional do projeto da disciplina de Compiladores. A modalidade
 escolhida é um **tradutor Oxente Lang → Python 3**, com implementação planejada em
 **C++17**, usando **Flex** para análise léxica e **Bison** para análise sintática.
 
-**Estado atual (OX-04):** especificação aprovada, build CMake, CLI e scanner Flex
-com testes independentes da gramática. O scanner reconhece o subconjunto léxico
-inequívoco e sinaliza limitações documentais. Parser funcional, AST, semântica e
-tradução ainda não estão disponíveis.
+**Estado atual (OX-05):** build CMake, CLI, scanner Flex e parser Bison para
+expressões e comandos simples, com construção de AST e testes próprios. Há
+componentes independentes de escopos, diagnósticos e runtime. A CLI ainda não
+conecta essas etapas; os modos de análise e tradução permanecem não implementados.
 
 O pipeline planejado é: arquivo `.oxe` → Flex → Bison → AST explícita → análise
 semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
@@ -166,28 +166,31 @@ sintática/semântica. A CLI `oxente` mantém os três modos não implementados.
 
 A integração conserva o esqueleto C do Bison e o scanner C do Flex compilados
 como C++17, sem `libfl`, com prefixo `oxinfra`. O scanner agora é reentrante e o
-parser usa `api.pure full`, `%locations` e o parâmetro `void* scanner`.
-`src/frontend/infra.y` é a fonte única dos tokens. O parser provisório continua
-rejeitando qualquer entrada, inclusive vazia; não tem produções da linguagem.
+parser usa `api.pure full`, `%locations` e `oxente::ParserContext*`.
+`src/frontend/infra.y` é a fonte única dos tokens e contém o parser parcial
+da OX-05, acessível pela API descrita abaixo.
 
 `oxente::Scanner` em `src/frontend/scanner.hpp` encapsula o estado Flex e empresta
 o `FILE*` do consumidor. Cada token não EOF entrega um `std::string*` em
 `OXINFRASTYPE::texto`: **o consumidor deve liberá-lo**. O Bison já declara
-`%destructor`; futuras ações da OX-05/OX-07 deverão mover/copiar esses valores e
-liberá-los ao construir a AST explícita. Todos os lexemas são preservados,
+`%destructor` e ações que liberam os textos recebidos. Na interface do parser,
+`proximo_significativo` elimina espaços e libera os lexemas de palavras e
+operadores sem valor semântico; os demais passam às ações ou aos destruidores.
+Na API bruta `proximo`, todos os lexemas são preservados,
 inclusive zeros iniciais, vírgula decimal e delimitadores de texto, sem converter
 para `int`/`double` nem fixar limites numéricos ou espaços de borda do valor textual.
 
 Localizações começam em 1 e usam fim exclusivo. Cada byte ASCII e cada tabulação
 avançam uma coluna de origem; CRLF avança uma linha, como LF. EOF tem intervalo
-vazio no cursor e não cria `NL` artificial: o parser futuro deverá consumi-lo como
+vazio no cursor e não cria `NL` artificial: o parser o aceita como
 término da última instrução. `ErroLexico` carrega intervalo e mensagem; a análise
 para no primeiro erro e o consumidor deve abandonar essa instância do scanner.
 
 Como espaços significativos e o tratamento sintático de comentários permanecem
 pendentes, o scanner preserva espaços/tabulações externos em `ESPACO` e emite
 `NL` para **todas as quebras físicas fora de textos**, inclusive em comentários.
-Não há tokens de indentação nem decisão de como esses tokens entram na gramática.
+Não há tokens de indentação. O parser descarta `ESPACO` como limitação da
+implementação atual; isso não resolve a regra documental de espaços significativos.
 Comentário não gera outros tokens nem aninha; posicionamento entre instruções
 completas será responsabilidade da integração futura, não validado pelo scanner.
 
@@ -205,8 +208,39 @@ sua utilização será decidida pelo parser. As reservadas da extensão
 
 Os testes de lexer conferem tokens, lexemas, início/fim, reservadas, operadores,
 LF/CRLF/EOF, comentários, textos e falhas. Também exercitam instâncias isoladas,
-rejeição pelo parser provisório e códigos/canais do harness. As pendências
+rejeição de entradas vazias/incompletas pelo parser e códigos/canais do harness. As pendências
 continuam em [tokens](docs/tokens.md#pontos-a-confirmar); a OX-04 não as resolve.
+
+## Parser de expressões e comandos simples (OX-05)
+
+`oxente::parse(Scanner&, DiagnosticEngine* = nullptr)`, declarado em
+`src/frontend/scanner.hpp`, retorna `std::unique_ptr<ProgramNode>` no sucesso e
+`nullptr` em erro de entrada, sem AST parcial. Quando fornecido, o motor recebe
+um diagnóstico após a liberação da pilha do Bison, inclusive quando configurado
+para lançar `DiagnosticException`; essa exceção é contida pela API. O scanner
+bruto continua lançando `ErroLexico` para seus consumidores diretos.
+
+O subconjunto aceita declarações inicializadas dos quatro tipos, atribuições,
+`diga_ai(identificador)` e `desembucha(expressao; ...)`, além das expressões da
+[gramática](docs/grammar.md#expressões-esboço-por-níveis). Comandos consecutivos
+exigem LF ou CRLF; linhas vazias são aceitas e EOF termina o último comando.
+Expressões não continuam em outra linha. Programa e bloco principal recebem a
+posição do primeiro comando, ignorando linhas iniciais vazias. Entrada vazia
+continua inválida. Condicionais, laços e funções não são reconhecidos nesta etapa.
+
+A AST atual armazena números como `int` e `double`. A conversão preserva a vírgula
+decimal na origem; literais que não cabem nessa representação produzem diagnóstico
+léxico `literal_fora_da_representacao` na posição do literal. Esses são limites da
+implementação, não faixas aprovadas para a linguagem. O sinal permanece um operador
+unário: inclusive a magnitude de um literal negativo passa pela conversão antes
+do sinal. As operações são representadas em nós, sem avaliação pelo parser.
+
+Os testes `parser` e `scope` exercitam a API real, incluindo agrupamentos da AST,
+términos, argumentos de saída, localização e falhas com pilha parcialmente
+construída. O teste manual da AST também conserva o construtor de saída com um
+argumento. A CLI, espaços significativos e comentários de bloco no meio de
+expressões permanecem fora desta integração; as pendências documentais continuam
+válidas.
 
 ## Escopo
 

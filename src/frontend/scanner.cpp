@@ -5,7 +5,6 @@ int oxinfralex_init_extra(oxente::ContextoLexico*, void**);
 int oxinfralex_destroy(void*);
 void oxinfraset_in(FILE*, void*);
 int oxinfralex(OXINFRASTYPE*, OXINFRALTYPE*, void*);
-namespace oxente { struct ParserContext; }
 namespace oxente {
 void ContextoLexico::avancar(OXINFRALTYPE* local, const char* dados, int tamanho) {
   local->first_line = linha;
@@ -113,16 +112,40 @@ int Scanner::proximo_significativo(OXINFRASTYPE* valor, OXINFRALTYPE* local) {
       valor->texto = nullptr;
       continue;
     }
+    // A API bruta preserva todos os lexemas para oxente-tokens. Para o
+    // Bison, só estas categorias transportam texto; os demais tokens não
+    // têm valor semântico e são liberados antes de entrar na pilha.
+    switch (tok) {
+      case IDENT: case INTEIRO: case REAL: case TEXTO: case NL:
+        break;
+      default:
+        delete valor->texto;
+        valor->texto = nullptr;
+    }
     return tok;
   }
 }
 
 std::unique_ptr<ProgramNode> parse(Scanner& scanner, DiagnosticEngine* engine) {
-  ParserContext ctx{&scanner, engine, nullptr};
-  if (::oxinfraparse(&ctx) != 0) {
+  ParserContext ctx{&scanner, engine, nullptr, std::nullopt};
+  int resultado = ::oxinfraparse(&ctx);
+  if (ctx.erro) {
+    // A pilha do Bison já foi liberada. O contrato desta API é retornar
+    // nullptr para erros de entrada, inclusive com motor que lança exceção.
+    ctx.raiz.reset();
+    if (engine) {
+      try {
+        engine->emitir(ctx.erro->etapa, ctx.erro->loc,
+                       ctx.erro->causa_tecnica, ctx.erro->mensagem);
+      } catch (const DiagnosticException&) {
+        return nullptr;
+      }
+    }
+    return nullptr;
+  }
+  if (resultado != 0) {
     return nullptr;
   }
   return std::move(ctx.raiz);
 }
 }  // namespace oxente
-

@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <optional>
 #include "ast/AstNode.hpp"
 #include "ast/ExprNodes.hpp"
 #include "ast/StmtNodes.hpp"
@@ -22,6 +23,14 @@ namespace oxente {
     Scanner* scanner;
     DiagnosticEngine* engine;
     std::unique_ptr<ProgramNode> raiz;
+    std::optional<Diagnostic> erro;
+
+    // Registrar aqui e emitir depois do retorno do Bison permite executar
+    // os %destructor antes de qualquer exceção do motor de diagnósticos.
+    void registrar_erro(Stage etapa, SourceLocation loc,
+                        const std::string& causa, const std::string& mensagem) {
+      if (!erro) erro.emplace(etapa, loc, causa, mensagem);
+    }
   };
 }
 }
@@ -29,16 +38,47 @@ namespace oxente {
 %code {
 #include "scanner.hpp"
 #include <stdexcept>
+#include <cmath>
 
 int oxinfralex(OXINFRASTYPE* yylval, OXINFRALTYPE* yylloc, oxente::ParserContext* ctx) {
-    return ctx->scanner->proximo_significativo(yylval, yylloc);
+    try {
+        return ctx->scanner->proximo_significativo(yylval, yylloc);
+    } catch (const oxente::ErroLexico& erro) {
+        ctx->registrar_erro(oxente::Stage::Lexico,
+            {erro.local.first_line, erro.local.first_column}, "erro_lexico", erro.what());
+        // O token de erro faz o Bison liberar a pilha sem emitir outro erro.
+        return OXINFRAerror;
+    }
 }
 
 void oxinfraerror(OXINFRALTYPE* loc, oxente::ParserContext* ctx, const char* msg) {
     oxente::SourceLocation sloc{loc ? loc->first_line : 0, loc ? loc->first_column : 0};
-    if (ctx && ctx->engine) {
-        ctx->engine->emitir(oxente::Stage::Sintatico, sloc, "sintaxe_invalida", msg);
+    if (ctx) {
+        ctx->registrar_erro(oxente::Stage::Sintatico, sloc, "sintaxe_invalida",
+            std::string(msg) == "syntax error" ? "Entrada fora da gramatica." : msg);
     }
+}
+
+static LiteralExprNode* literal_numerico(oxente::ParserContext* ctx,
+        const std::string& texto, TypeKind tipo, oxente::SourceLocation loc) {
+    try {
+        if (tipo == TypeKind::Inteiro) {
+            return new LiteralExprNode(std::stoi(texto), tipo, loc);
+        }
+        std::string decimal = texto;
+        const auto virgula = decimal.find(',');
+        if (virgula != std::string::npos) decimal[virgula] = '.';
+        double valor = std::stod(decimal);
+        if (std::isfinite(valor)) return new LiteralExprNode(valor, tipo, loc);
+    } catch (const std::out_of_range&) {
+        // A representação atual é a da AST (int/double), não uma nova regra.
+    } catch (const std::invalid_argument&) {
+        // O lexer só fornece formatos numéricos reconhecidos.
+    }
+    ctx->registrar_erro(oxente::Stage::Lexico, loc,
+        "literal_fora_da_representacao",
+        "Literal numerico fora da representacao atual da AST.");
+    return nullptr;
 }
 }
 
@@ -76,13 +116,14 @@ void oxinfraerror(OXINFRALTYPE* loc, oxente::ParserContext* ctx, const char* msg
 %%
 
 programa:
-    bloco_instrucoes {
-        ctx->raiz = std::make_unique<ProgramNode>(std::unique_ptr<BlockStmtNode>($1));
+    linhas_iniciais bloco_instrucoes {
+        auto loc = $2->loc;
+        ctx->raiz = std::make_unique<ProgramNode>(std::unique_ptr<BlockStmtNode>($2), loc);
     }
   ;
 
 linhas_iniciais:
-    NL { delete $1; }
+    %empty
   | linhas_iniciais NL { delete $2; }
   ;
 
@@ -91,17 +132,14 @@ bloco_instrucoes:
         delete $2;
         $$ = $1;
     }
-  | bloco_instrucoes instrucao {
+  | bloco_instrucoes NL instrucao {
+        delete $2;
         $$ = $1;
-        if ($2) $$->add(std::unique_ptr<StmtNode>($2));
-    }
-  | linhas_iniciais instrucao {
-        $$ = new BlockStmtNode();
-        if ($2) $$->add(std::unique_ptr<StmtNode>($2));
+        $$->add(std::unique_ptr<StmtNode>($3));
     }
   | instrucao {
-        $$ = new BlockStmtNode();
-        if ($1) $$->add(std::unique_ptr<StmtNode>($1));
+        $$ = new BlockStmtNode($1->loc);
+        $$->add(std::unique_ptr<StmtNode>($1));
     }
   ;
 
@@ -273,16 +311,16 @@ potencia:
 primario:
     INTEIRO {
         oxente::SourceLocation loc{@$.first_line, @$.first_column};
-        $$ = new LiteralExprNode(std::stoi(*$1), TypeKind::Inteiro, loc);
-        delete $1;
+        std::unique_ptr<std::string> texto($1);
+        $$ = literal_numerico(ctx, *texto, TypeKind::Inteiro, loc);
+        // YYABORT não destrói os valores da produção corrente: texto é RAII.
+        if (!$$) YYABORT;
     }
   | REAL {
         oxente::SourceLocation loc{@$.first_line, @$.first_column};
-        std::string s = *$1;
-        auto pos = s.find(',');
-        if (pos != std::string::npos) s[pos] = '.';
-        $$ = new LiteralExprNode(std::stod(s), TypeKind::Tronxo, loc);
-        delete $1;
+        std::unique_ptr<std::string> texto($1);
+        $$ = literal_numerico(ctx, *texto, TypeKind::Tronxo, loc);
+        if (!$$) YYABORT;
     }
   | EVERA {
         oxente::SourceLocation loc{@$.first_line, @$.first_column};

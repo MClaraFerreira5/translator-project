@@ -6,7 +6,7 @@
 #include <string>
 #include <memory>
 
-// Forward declarations da AST
+// Declaração antecipada da AST.
 class ProgramNode;
 
 namespace oxente {
@@ -24,7 +24,8 @@ struct ContextoLexico {
   [[noreturn]] void erro(OXINFRALTYPE local, const std::string& mensagem) const;
 };
 // O consumidor é dono de valor.texto em cada token não EOF; deve liberá-lo.
-// O parser Bison usa %destructor; futuras ações devem mover/copiar o valor.
+// proximo_significativo descarta espaços e libera o texto dos tokens sem
+// valor semântico. Os demais textos passam para as ações/%destructor do Bison.
 class Scanner {
  public:
   explicit Scanner(FILE* entrada);
@@ -44,5 +45,7 @@ class Scanner {
 const char* nome_token(int token);
 std::string representar(const std::string& texto);
 
+// Retorna nullptr em erro léxico, sintático ou de representação numérica;
+// emite o primeiro diagnóstico no motor opcional após liberar a pilha Bison.
 std::unique_ptr<ProgramNode> parse(Scanner& scanner, DiagnosticEngine* engine = nullptr);
 }  // namespace oxente

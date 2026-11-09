@@ -34,7 +34,9 @@ public:
 
     void visit(OutputStmtNode& node) override {
         total_nos_visitados++;
-        if (node.expressao) node.expressao->accept(*this);
+        for (auto& argumento : node.argumentos) {
+            if (argumento) argumento->accept(*this);
+        }
     }
 
     void visit(InputStmtNode&) override { total_nos_visitados++; }
