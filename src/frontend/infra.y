@@ -82,6 +82,7 @@ static LiteralExprNode* literal_numerico(oxente::ParserContext* ctx,
 }
 }
 
+/* Valores transportados na pilha do parser. */
 %union {
     std::string* texto;
     TypeKind tipo_dado;
@@ -91,6 +92,7 @@ static LiteralExprNode* literal_numerico(oxente::ParserContext* ctx,
     std::vector<std::unique_ptr<ExprNode>>* lista_expr;
 }
 
+/* Tokens: a grafia da origem é reconhecida pelo Flex. */
 %token INDISPONIVEL
 %token <texto> IDENT INTEIRO REAL TEXTO NL ESPACO
 %token T_INTEIRO TRONXO PAPO RESENHA BOTA BORA ARREMATA
@@ -101,6 +103,7 @@ static LiteralExprNode* literal_numerico(oxente::ParserContext* ctx,
 %token MAIOR MENOR MAIOR_IGUAL MENOR_IGUAL IGUAL DIFERENTE
 %token ABRE_PAR FECHA_PAR PONTO_VIRGULA
 
+/* Em erro, liberar valores que ainda pertencem à pilha do Bison. */
 %destructor { delete $$; } <texto>
 %destructor { delete $$; } <expr>
 %destructor { delete $$; } <stmt>
@@ -115,6 +118,7 @@ static LiteralExprNode* literal_numerico(oxente::ParserContext* ctx,
 
 %%
 
+/* Programa, términos e sequência de instruções. */
 programa:
     instrucoes {
         ctx->raiz = std::make_unique<ProgramNode>(std::unique_ptr<BlockStmtNode>($1), $1->loc);
@@ -165,6 +169,7 @@ simples:
     }
   ;
 
+/* Blocos e controle de fluxo; restrições de tipos e contexto são semânticas. */
 bloco:
     BORA linhas corpo ARREMATA linhas {
         $$ = $3;
@@ -218,6 +223,7 @@ inicio_para:
   | atribuicao { $$ = $1; }
   ;
 
+/* Comandos simples: as ações transferem os filhos para a AST explícita. */
 tipo:
     T_INTEIRO { $$ = TypeKind::Inteiro; }
   | TRONXO    { $$ = TypeKind::Tronxo; }
@@ -268,6 +274,7 @@ argumentos:
     }
   ;
 
+/* Expressões por níveis: a estrutura das produções define a precedência. */
 expressao:
     disjuncao { $$ = $1; }
   ;
@@ -324,6 +331,7 @@ comparacao:
   | soma { $$ = $1; }
   ;
 
+/* Recursão à esquerda agrupa soma e produto; potência recorre à direita. */
 soma:
     soma MAIS produto {
         oxente::SourceLocation loc{@$.first_line, @$.first_column};
@@ -376,6 +384,7 @@ potencia:
   | primario { $$ = $1; }
   ;
 
+/* Folhas e agrupamento; literais são convertidos somente ao criar a AST. */
 primario:
     INTEIRO {
         oxente::SourceLocation loc{@$.first_line, @$.first_column};
