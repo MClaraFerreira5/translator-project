@@ -4,9 +4,10 @@ Linguagem educacional do projeto da disciplina de Compiladores. A modalidade
 escolhida é um **tradutor Oxente Lang → Python 3**, com implementação planejada em
 **C++17**, usando **Flex** para análise léxica e **Bison** para análise sintática.
 
-**Estado atual (OX-05):** build CMake, CLI, scanner Flex e parser Bison para
+**Estado atual (OX-09):** build CMake, CLI, scanner Flex e parser Bison para
 expressões e comandos simples, com construção de AST e testes próprios. Há
-componentes independentes de escopos, diagnósticos e runtime. A CLI ainda não
+[análise semântica](docs/semantics.md#api-implementada-na-ox-09) e componentes
+independentes de escopos, diagnósticos e runtime. A CLI ainda não
 conecta essas etapas; os modos de análise e tradução permanecem não implementados.
 
 O pipeline planejado é: arquivo `.oxe` → Flex → Bison → AST explícita → análise

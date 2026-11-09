@@ -1,8 +1,37 @@
 # Regras semânticas previstas
 
 Base: §§2 e 5–6 da [definição entregue](references/definicao-entregue.md).
-As verificações abaixo são planejadas; não há analisador semântico implementado.
+As regras abaixo orientam o analisador parcial da OX-09 e as etapas futuras.
 Consulte a [gramática](grammar.md) e os [casos de referência](../examples/README.md).
+
+## API implementada na OX-09
+
+`oxente::SemanticAnalyzer`, em `src/semantic/SemanticAnalyzer.hpp`, recebe uma
+AST por `no.accept(analisador)`. O visitante verifica nomes, tipos e contexto de
+laços; não avalia expressões nem gera Python. Os tipos resolvidos ficam em
+`ExprNode::tipo_calculado`. A CLI ainda não chama esse analisador.
+
+Todos os argumentos de saída são percorridos na ordem da AST. Uma declaração
+sem inicializador é rejeitada na posição da declaração com
+`inicializador_ausente`, inclusive em ASTs manuais, sem inserir o nome na tabela.
+O inicializador existente continua sendo analisado antes da inserção do nome.
+Incompatibilidades de operadores usam `misturou_as_coisas` e informam a operação,
+a exigência e os tipos encontrados; `TypeKind::Erro` permanece um sentinela
+interno de propagação, sem substituir o tipo real nos diagnósticos dos operadores.
+
+Com `DiagnosticEngine` no modo padrão, a falha lança `DiagnosticException`.
+O consumidor deve tratar essa exceção como falha mesmo quando ela ocorre na
+tabela de símbolos antes de `SemanticAnalyzer::tem_erros` ser marcada. Com
+`parar_no_primeiro=false`, a análise pode continuar e o consumidor consulta
+`tem_erros` e `motor.tem_erros()`. Sem motor, a flag do visitante sinaliza a
+falha, sem emitir mensagem. Anotações de uma análise com erro não autorizam
+geração. A reutilização do visitante após exceção ainda não tem contrato;
+o consumidor deve descartá-lo nessa situação.
+
+As matrizes pendentes de comparação, os detalhes de `arrodeia` e os metadados
+adicionais para o gerador não são definidos por esta API. Os testes `semantic`
+usam ASTs manuais; as regressões de integração em `parser` exercitam também
+`oxente::parse` seguido pelo analisador.
 
 ## Declaração, inicialização e escopo
 
@@ -15,9 +44,9 @@ Consulte a [gramática](grammar.md) e os [casos de referência](../examples/READ
 - Rejeitar nome já visível, inclusive em bloco interno: não há sombreamento.
   Nomes podem ser reutilizados em blocos independentes após saírem de visibilidade.
 
-A tabela de símbolos planejada registrará nome, tipo, escopo e localização da
-declaração. A análise percorrerá a AST, controlando abertura/fechamento de escopos
-e contexto de laço. A forma de armazenamento e as classes ainda não existem.
+A tabela de símbolos registra nome, tipo, escopo, localização da declaração e
+estado de inicialização. A análise percorre a AST, controlando escopos e contexto
+de laço. A persistência de associações para o gerador depende de integração futura.
 
 ## Tipagem e operadores
 

@@ -7,6 +7,7 @@
 #include <cassert>
 #include <string>
 #include <sstream>
+#include "semantic/SemanticAnalyzer.hpp"
 
 namespace {
 
@@ -66,6 +67,39 @@ void conferir_erro(const std::string& codigo, oxente::Stage etapa,
     auto arq = criar_fonte(codigo);
     oxente::Scanner scanner(arq.get());
     exigir(oxente::parse(scanner) == nullptr, "Erro sem motor retornou AST");
+}
+
+void conferir_erro_semantico(const std::string& codigo, const std::string& causa,
+                            int linha, int coluna, const std::vector<std::string>& trechos) {
+    for (bool parar : {false, true}) {
+        auto ast = parse_codigo(codigo);
+        exigir(ast != nullptr, "Sonda semântica rejeitada no parser");
+        oxente::DiagnosticEngine motor("integracao.oxe", parar);
+        oxente::SemanticAnalyzer analisador(&motor);
+        CapturarErros captura;
+        bool lancou = false;
+        try {
+            ast->accept(analisador);
+        } catch (const oxente::DiagnosticException& erro) {
+            lancou = true;
+            exigir(erro.get().etapa == oxente::Stage::Semantico &&
+                   erro.get().causa_tecnica == causa, "Diagnóstico incorreto na exceção");
+            exigir(erro.get().loc.line == linha && erro.get().loc.column == coluna,
+                   "Localização incorreta na exceção");
+        }
+        exigir(lancou == parar && motor.tem_erros(), "Sinalização semântica incorreta");
+        if (!parar) exigir(analisador.tem_erros, "Visitante não marcou a falha");
+        const auto mensagem = captura.saida.str();
+        exigir(mensagem.find("[semântico]") != std::string::npos, "Etapa incorreta");
+        exigir(mensagem.find("integracao.oxe:" + std::to_string(linha) + ":" +
+                             std::to_string(coluna) + ":") != std::string::npos,
+               "Localização incorreta");
+        exigir(mensagem.find("erro '" + causa + "'") != std::string::npos, "Causa incorreta");
+        for (const auto& trecho : trechos) {
+            exigir(mensagem.find(trecho) != std::string::npos, "Diagnóstico sem: " + trecho);
+        }
+        exigir(mensagem.find('\n') == mensagem.size() - 1, "Mais de um diagnóstico emitido");
+    }
 }
 
 } // namespace
@@ -263,6 +297,32 @@ int main() {
                       "erro_lexico", 2, 19);
         conferir_erro("inteiro x bota 1\ndesembucha(vei texto", oxente::Stage::Lexico,
                       "erro_lexico", 2, 12);
+    }
+
+    // 13. Reproduções OX-09: AST do parser real seguida do analisador semântico.
+    {
+        conferir_erro_semantico("inteiro x bota 1\ndesembucha(x; ausente)",
+                                "nome_nao_declarado", 2, 15, {"ausente"});
+        conferir_erro_semantico("desembucha(1 + evera)", "misturou_as_coisas", 1, 12,
+                                {"'+'", "numericos", "'inteiro'", "'papo'"});
+        conferir_erro_semantico("desembucha(8,5 // 2)", "misturou_as_coisas", 1, 12,
+                                {"'//'", "tipo inteiro", "'tronxo'", "'inteiro'"});
+        conferir_erro_semantico("inteiro x bota x + 1", "nome_nao_declarado", 1, 16, {"x"});
+        conferir_erro("inteiro x", oxente::Stage::Sintatico, "sintaxe_invalida", 1, 10);
+
+        auto ast = parse_codigo("inteiro x bota 1\ntronxo y bota x\npapo p bota evera\n"
+                                "resenha r bota vei texto tendeu\ndesembucha(x; y; p; r)");
+        exigir(ast != nullptr, "Saída válida rejeitada pelo parser");
+        oxente::DiagnosticEngine motor("valido.oxe");
+        oxente::SemanticAnalyzer analisador(&motor);
+        ast->accept(analisador);
+        exigir(!analisador.tem_erros && !motor.tem_erros(), "Saída válida rejeitada na semântica");
+        auto* saida = dynamic_cast<OutputStmtNode*>(ast->bloco_principal->comandos.back().get());
+        exigir(saida && saida->argumentos.size() == 4, "Argumentos de saída incorretos");
+        const std::vector<TypeKind> tipos{TypeKind::Inteiro, TypeKind::Tronxo, TypeKind::Papo, TypeKind::Resenha};
+        for (std::size_t i = 0; i < tipos.size(); ++i) {
+            exigir(saida->argumentos[i]->tipo_calculado == tipos[i], "Argumento sem tipo resolvido");
+        }
     }
 
     std::cout << "[SUCESSO] Testes do parser concluídos." << std::endl;
