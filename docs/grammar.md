@@ -1,8 +1,9 @@
 # Gramática inicial e abordagem sintática
 
 Base: §§2–5 da [definição entregue](references/definicao-entregue.md).
-Esta EBNF é um **esboço documental**, não uma gramática Bison implementada,
-completa ou comprovadamente livre de conflitos. Os [tokens](tokens.md) e a
+Esta EBNF é um **esboço documental**, não uma gramática completa. A implementação
+parcial da OX-05 está em [infra.y](../src/frontend/infra.y) e cobre expressões,
+declarações, atribuições, entrada e saída. Os [tokens](tokens.md) e a
 [semântica](semantics.md) complementam as regras de estrutura.
 
 ## Notação e limites
@@ -15,7 +16,9 @@ literal inteiro delimitado por `vei`/`tendeu`.
 No esboço, LF e CRLF correspondem a `FIM_LINHA`; EOF pode fornecer o término
 da última instrução. Comentários são tratados pelo léxico, mantendo localização
 e términos significativos conforme [tokens](tokens.md). A estratégia exata
-lexer/parser, inclusive EOF após comentários e linhas vazias, ainda será definida.
+lexer/parser ainda tem pendências de comentários. No subconjunto implementado,
+há término obrigatório entre comandos simples, LF/CRLF, linhas vazias e EOF
+como término do último comando; comentários de fim de linha preservam a quebra.
 
 ## Estruturas amparadas na fonte
 
@@ -129,5 +132,6 @@ forma de procedimento, retorno vazio e demais detalhes dependem de confirmação
   operadores que o esboço permite, sem apresentá-los como já testados.
 - Completar sintaxe da extensão e revisar `funcao`/`aperreio` na fonte.
 
-A etapa futura com Bison deverá verificar conflitos e adequar o esboço às
-decisões confirmadas. Nenhum `parser.y` foi criado nesta etapa.
+As extensões futuras do Bison deverão verificar conflitos e respeitar as
+decisões confirmadas. O [contrato da API atual](../README.md#parser-de-expressões-e-comandos-simples-ox-05)
+distingue o subconjunto implementado das construções e decisões pendentes.

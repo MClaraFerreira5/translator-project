@@ -57,8 +57,8 @@ public:
     }
 
     void visit(OutputStmtNode& node) override {
-        if (node.expressao) {
-            node.expressao->accept(*this);
+        for (auto& argumento : node.argumentos) {
+            if (argumento) argumento->accept(*this);
         }
     }
 

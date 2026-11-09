@@ -61,13 +61,22 @@ public:
     void accept(AstVisitor& visitor) override { visitor.visit(*this); }
 };
 
-// Saída: mostre / escreva
+
+// Saída: desembucha
 class OutputStmtNode : public StmtNode {
 public:
-    std::unique_ptr<ExprNode> expressao;
+    std::vector<std::unique_ptr<ExprNode>> argumentos;
 
+    explicit OutputStmtNode(std::vector<std::unique_ptr<ExprNode>> args, SourceLocation l = {0, 0})
+        : StmtNode(l), argumentos(std::move(args)) {}
+
+    // Construtor de conveniência para um único argumento (mantém compatibilidade)
     explicit OutputStmtNode(std::unique_ptr<ExprNode> expr, SourceLocation l = {0, 0})
-        : StmtNode(l), expressao(std::move(expr)) {}
+        : StmtNode(l) {
+        if (expr) {
+            argumentos.push_back(std::move(expr));
+        }
+    }
 
     void accept(AstVisitor& visitor) override { visitor.visit(*this); }
 };

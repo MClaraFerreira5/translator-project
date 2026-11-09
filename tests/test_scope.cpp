@@ -4,8 +4,37 @@
 #include "ast/ExprNodes.hpp"
 #include <iostream>
 #include <cassert>
+#include <sstream>
+#include "frontend/scanner.hpp"
 
 using namespace oxente;
+
+namespace {
+void exigir(bool condicao, const std::string& mensagem) {
+    if (!condicao) throw std::runtime_error(mensagem);
+}
+
+struct FecharArquivo {
+    void operator()(FILE* arquivo) const { if (arquivo) std::fclose(arquivo); }
+};
+
+struct CapturarErros {
+    std::ostringstream saida;
+    std::streambuf* anterior = std::cerr.rdbuf(saida.rdbuf());
+    ~CapturarErros() { std::cerr.rdbuf(anterior); }
+};
+
+class VisitanteOrdenado : public ScopeVisitor {
+public:
+    std::vector<std::string> nomes;
+    using ScopeVisitor::ScopeVisitor;
+    using ScopeVisitor::visit;
+    void visit(IdentifierExprNode& node) override {
+        nomes.push_back(node.nome);
+        ScopeVisitor::visit(node);
+    }
+};
+}
 
 int main() {
     std::cout << "[TESTE ESCOPO] Iniciando testes de escopo..." << std::endl;
@@ -97,6 +126,45 @@ int main() {
 
         // Fora do arrodeia, 'i' NÃO pode ser visível!
         assert(visitor.tabela.buscar("i") == nullptr);
+    }
+
+    // 6. O segundo argumento de saída também passa pela resolução de nomes.
+    {
+        std::unique_ptr<FILE, FecharArquivo> arquivo(std::tmpfile());
+        exigir(arquivo != nullptr, "Falha ao criar fonte de teste");
+        const std::string codigo = "inteiro x bota 1\ndesembucha(x; ausente)";
+        const auto escritos = std::fwrite(codigo.data(), 1, codigo.size(), arquivo.get());
+        exigir(escritos == codigo.size(), "Falha ao escrever fonte de teste");
+        std::rewind(arquivo.get());
+        Scanner scanner(arquivo.get());
+        auto ast = parse(scanner);
+        exigir(ast != nullptr, "Programa de saída rejeitado pelo parser");
+        DiagnosticEngine engine("saida.oxe", false);
+        VisitanteOrdenado visitor(&engine);
+        CapturarErros captura;
+        ast->accept(visitor);
+        exigir(visitor.houve_erro && engine.tem_erros(), "Segundo argumento não foi verificado");
+        exigir(visitor.nomes == std::vector<std::string>{"x", "ausente"}, "Ordem de visita incorreta");
+        const auto mensagem = captura.saida.str();
+        exigir(mensagem.find("saida.oxe:2:15:") != std::string::npos, "Localização incorreta");
+        exigir(mensagem.find("nome_nao_declarado") != std::string::npos, "Causa incorreta");
+        exigir(mensagem.find("ausente") != std::string::npos, "Nome ausente no diagnóstico");
+    }
+
+    // 7. Mantém o construtor de um argumento e percorre vários na ordem da AST.
+    {
+        VisitanteOrdenado visitor;
+        exigir(visitor.tabela.inserir("x", TypeKind::Inteiro, {1, 1}), "Falha ao declarar x");
+        exigir(visitor.tabela.inserir("y", TypeKind::Inteiro, {2, 1}), "Falha ao declarar y");
+        OutputStmtNode unica(std::make_unique<IdentifierExprNode>("x"));
+        unica.accept(visitor);
+        std::vector<std::unique_ptr<ExprNode>> argumentos;
+        argumentos.push_back(std::make_unique<IdentifierExprNode>("y"));
+        argumentos.push_back(std::make_unique<IdentifierExprNode>("x"));
+        OutputStmtNode multipla(std::move(argumentos));
+        multipla.accept(visitor);
+        exigir(!visitor.houve_erro, "Nome válido rejeitado");
+        exigir(visitor.nomes == std::vector<std::string>{"x", "y", "x"}, "Ordem de visita incorreta");
     }
 
     std::cout << "[SUCESSO] Todos os critérios de escopo foram validados!" << std::endl;

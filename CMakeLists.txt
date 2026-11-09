@@ -19,7 +19,10 @@ ADD_FLEX_BISON_DEPENDENCY(InfraLexer InfraParser)
 add_library(oxente_frontend STATIC src/frontend/scanner.cpp
   ${BISON_InfraParser_OUTPUTS} ${FLEX_InfraLexer_OUTPUTS})
 target_include_directories(oxente_frontend PUBLIC
-  "${CMAKE_CURRENT_BINARY_DIR}/generated" "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend")
+  "${CMAKE_CURRENT_BINARY_DIR}/generated" 
+  "${CMAKE_CURRENT_SOURCE_DIR}/src"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend"
+  )
 add_executable(oxente src/main.cpp)
 target_link_libraries(oxente PRIVATE oxente_frontend)
 add_executable(oxente-tokens src/frontend/tokens_main.cpp)
@@ -54,4 +57,8 @@ if(BUILD_TESTING)
   target_link_libraries(test-scope PRIVATE oxente_frontend)
   target_include_directories(test-scope PRIVATE src src/common src/ast src/semantic)
   add_test(NAME scope COMMAND test-scope)
+  add_executable(teste-parser tests/teste_parser.cpp)
+  target_link_libraries(teste-parser PRIVATE oxente_frontend)
+  target_include_directories(teste-parser PRIVATE src/common src/ast)
+  add_test(NAME parser COMMAND teste-parser)
 endif()
