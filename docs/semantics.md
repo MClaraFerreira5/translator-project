@@ -127,7 +127,10 @@ de múltiplos erros é possibilidade futura. Mensagens devem indicar localizaç�
 Operações só são válidas dentro das faixas dos tipos escolhidos. A implementação
 deverá documentar limites e verificar operações para rejeitar valores fora da
 faixa e resultados reais não finitos, mesmo que Python aceite inteiros maiores.
-Hoje só `**` rejeita resultado não finito. Larguras de tipos, mensagens desses erros e detalhes de arredondamento ainda
+O runtime rejeita entradas reais não finitas, resultados não finitos de
+`+`, `-`, `*`, `/` e `**`, e falhas de conversão de inteiro para real com
+diagnóstico localizado. Consulte os códigos e limites em
+[runtime](runtime.md). Larguras de tipos e detalhes de arredondamento ainda
 não foram decididos. Não há vetores/indexação,
 portanto acesso fora dos limites não integra esta versão.
 

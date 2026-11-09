@@ -160,7 +160,7 @@
     "topicos": ["erros_gramatica", "operando_ausente", "sintatico"],
     "descricao": "Falta expressao apos operando '+' antes do final de linha",
     "resultado_esperado": "Interrupcao na etapa sintatica com diagnostico de erro gramatical",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -171,7 +171,7 @@
     "topicos": ["erros_gramatica", "delimitadores", "parenteses"],
     "descricao": "Condicao de vai_que sem fechar parenteses ')'",
     "resultado_esperado": "Interrupcao na etapa sintatica por parentese desbalanceado",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -182,7 +182,7 @@
     "topicos": ["erros_gramatica", "blocos", "arremata_ausente"],
     "descricao": "Bloco iniciado por bora sem fechamento arremata",
     "resultado_esperado": "Interrupcao na etapa sintatica por bloco nao fechado",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -193,7 +193,7 @@
     "topicos": ["erros_gramatica", "comparacao_encadeada", "relacionais"],
     "descricao": "Comparacao encadeada 1 < 2 < 3 proibida pela gramatica",
     "resultado_esperado": "Interrupcao na etapa sintatica rejeitando operadores relacionais em sequencia",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -204,7 +204,7 @@
     "topicos": ["erros_gramatica", "declaracao_invalida", "sintatico"],
     "descricao": "Declaracao com tipo seguido de bota sem identificador da variavel",
     "resultado_esperado": "Interrupcao na etapa sintatica por falta de identificador",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -342,7 +342,7 @@
     ],
     "descricao": "Ramo se_num_for sem vai_que anterior",
     "resultado_esperado": "Erro sintatico na linha 1",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -356,7 +356,7 @@
     ],
     "descricao": "Campo de parada de arrodeia sem ate",
     "resultado_esperado": "Erro sintatico na linha 1",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   },
   {
@@ -370,7 +370,7 @@
     ],
     "descricao": "Instrucao na mesma linha de bora",
     "resultado_esperado": "Erro sintatico na linha 1",
-    "causa_tecnica": "erro_sintatico",
+    "causa_tecnica": "sintaxe_invalida",
     "status_implementacao": "pronto"
   }
 ]

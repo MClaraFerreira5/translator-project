@@ -59,6 +59,49 @@ PROGRAMAS = [
     ("potencia_invalida", "desembucha(0 ** -1)\n", "", "", ["potencia_invalida", "linha 1"], 1),
 ]
 
+# Regressões numéricas: executam o Python autossuficiente fora da árvore fonte.
+for entrada in ("nan", "inf", "-inf", "1e400", "9" * 400):
+    PROGRAMAS.append((f"entrada_real_nao_finita_{len(PROGRAMAS)}",
+        "tronxo x bota 0\ndiga_ai(x)\ndesembucha(x)\n", entrada + "\n", "",
+        ["[execução]", "entrada_invalida", "linha 2"], 1))
+
+for nome, expressao in (
+    ("promocao_declaracao", "tronxo y bota x"),
+    ("promocao_atribuicao", "y bota x"),
+    ("divisao_esquerda", "tronxo y bota x / 2"),
+    ("divisao_direita", "tronxo y bota 2 / x"),
+    ("soma_mista", "tronxo y bota x + 1,0"),
+    ("subtracao_mista", "tronxo y bota 1,0 - x"),
+    ("multiplicacao_mista", "tronxo y bota x * 1,0"),
+):
+    inicio = "inteiro x bota 0\ndiga_ai(x)\n"
+    if nome == "promocao_atribuicao":
+        inicio = "inteiro x bota 0\ntronxo y bota 0\ndiga_ai(x)\n"
+    linha = inicio.count("\n") + 1
+    PROGRAMAS.append((nome, inicio + expressao + "\ndesembucha(y)\n", "9" * 400 + "\n", "",
+        ["[execução]", "real_fora_dos_limites", f"linha {linha}"], 1))
+
+for nome, expressao in (("soma", "x + x"), ("subtracao", "x - -x"),
+                         ("multiplicacao", "x * x"), ("divisao", "x / 0,1")):
+    PROGRAMAS.append((f"resultado_nao_finito_{nome}",
+        "tronxo x bota 0\ndiga_ai(x)\ntronxo y bota " + expressao + "\n",
+        "1e308\n", "", ["[execução]", "real_fora_dos_limites", "linha 3"], 1))
+
+PROGRAMAS.extend([
+    ("quadraturas", "tronxo x bota 10,0\n"
+     "arrodeia (inteiro i bota 0; ate i >= 9; i bota i + 1) bora\n x bota x * x\narremata\ndesembucha(x)\n",
+     "", "", ["[execução]", "real_fora_dos_limites", "linha 3"], 1),
+    ("reais_finitos", "tronxo x bota 0\ndiga_ai(x)\ndesembucha(x + 1; x - 1; x * 2; x / 2)\n",
+     "7.5\n", "8,500 6,500 15,000 3,750\n", [], 0),
+    ("inteiro_preciso", "inteiro x bota 0\ndiga_ai(x)\ndesembucha(x // 10; x % 10)\n",
+     "100000000000000003\n", "10000000000000000 3\n", [], 0),
+    ("curto_circuito_numerico", "tronxo x bota 0\ndiga_ai(x)\n"
+     "desembucha(evera ou (x * x > 0); pala e (x + x > 0))\n",
+     "1e308\n", "evera pala\n", [], 0),
+    ("ordem_dos_operandos", "tronxo x bota 0\ndiga_ai(x)\ndesembucha((x * x) + (1 / 0))\n",
+     "1e308\n", "", ["[execução]", "real_fora_dos_limites", "linha 3"], 1),
+])
+
 falhas = []
 casos = 0
 
@@ -88,6 +131,8 @@ def verificar_execucao(nome, oxe, pasta, oxente, entrada, stdout, trechos, codig
         return falhar(nome, f"traducao: codigo {ret}, stdout {saida!r}, stderr {erro!r}")
 
     ret, saida, erro = rodar([sys.executable, "-B", str(py)], pasta, entrada)
+    if "Traceback" in erro:
+        falhar(nome, f"traceback inesperado: {erro!r}")
     if ret != codigo:
         falhar(nome, f"codigo {ret}, esperado {codigo}; stderr {erro!r}")
     if saida != stdout:

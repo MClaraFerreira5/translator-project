@@ -233,7 +233,7 @@ void testes_expressoes() {
               saida(id("t")), bota("t", soma(id("i"), inteiro(1))), saida(id("t")), saida(soma(id("i"), real(0.5))),
               saida(id("i"))),
         "3,000\n4,000\n5,000\n4,500\n4\n");
-    contem("promocao_inteiro_tronxo", promocao, "float(");
+    contem("promocao_inteiro_tronxo", promocao, "_ox_tronxo(");
 
     caso("divisao_inteira_e_resto",
          bloco(saida(bin(BinaryOp::DivisaoInteira, un(UnaryOp::Negativo, inteiro(7)), inteiro(2))),
@@ -449,7 +449,7 @@ void testes_escopo() {
         "1\noxe\n2,000\n");
     contem("escopos_independentes", independentes, "v1_x = 1");
     contem("escopos_independentes", independentes, "v2_x = \"oxe\"");
-    contem("escopos_independentes", independentes, "v3_x = float(2)");
+    contem("escopos_independentes", independentes, "v3_x = _ox_tronxo(2, 0)");
 
     // Após o primeiro laço, i pode ser redeclarado e a promoção usa o tipo novo.
     caso("arrodeia_consecutivos_reusam_nome",

@@ -25,7 +25,7 @@ enum Precedencia {
 
 const char* const CABECALHO = "# Gerado pelo tradutor Oxente Lang. Nao edite manualmente.\n";
 const char* const IMPORTACAO =
-    "from oxente_runtime import _ox_desembucha, _ox_diga_ai, _ox_div, _ox_div_int, _ox_mod, _ox_pot\n";
+    "from oxente_runtime import _ox_desembucha, _ox_diga_ai, _ox_div, _ox_div_int, _ox_mod, _ox_pot, _ox_tronxo, _ox_soma, _ox_sub, _ox_mul\n";
 
 template <typename Ponteiro>
 Ponteiro* exigir(Ponteiro* ponteiro, const char* descricao) {
@@ -116,10 +116,10 @@ PythonGenerator::Expressao PythonGenerator::avaliar(ExprNode* expressao, const c
 std::string PythonGenerator::avaliarConvertido(ExprNode* expressao, TypeKind destino,
                                                const char* descricao) {
     const Expressao valor = avaliar(expressao, descricao);
-    // Promoção inteiro -> tronxo: sem float(), a variável guardaria um int
+    // Promoção inteiro -> tronxo: sem conversão, a variável guardaria um int
     // Python e seria exibida sem as três casas decimais.
     if (destino == TypeKind::Tronxo && valor.tipo == TypeKind::Inteiro) {
-        return "float(" + valor.codigo + ")";
+        return "_ox_tronxo(" + valor.codigo + ", " + std::to_string(expressao->loc.line) + ")";
     }
     return valor.codigo;
 }
@@ -345,6 +345,12 @@ void PythonGenerator::visit(BinaryExprNode& node) {
 
     if (precedencia == PrecSoma || precedencia == PrecMultiplicacao) {
         tipo = tipoAritmetico(esquerda.tipo, direita.tipo);
+        if (tipo == TypeKind::Tronxo) {
+            const char* helper = node.op == BinaryOp::Soma ? "_ox_soma"
+                                : node.op == BinaryOp::Subtracao ? "_ox_sub" : "_ox_mul";
+            resultado_ = chamadaRuntime(helper, esquerda, direita, linha_origem, tipo);
+            return;
+        }
     }
 
     // Comparações em Python encadeiam (a < b < c), então um operando que também

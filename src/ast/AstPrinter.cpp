@@ -53,7 +53,11 @@ std::string textoReal(double valor) {
     const auto fim = std::to_chars(buffer, buffer + sizeof buffer, valor).ptr;
     std::string texto(buffer, fim);
     const auto ponto = texto.find('.');
-    if (ponto == std::string::npos) return texto + ",0";
+    if (ponto == std::string::npos) {
+        const auto expoente = texto.find_first_of("eE");
+        texto.insert(expoente == std::string::npos ? texto.size() : expoente, ",0");
+        return texto;
+    }
     texto[ponto] = ',';
     return texto;
 }

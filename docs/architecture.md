@@ -89,8 +89,9 @@ tradutor, e não diagnóstico para o usuário.
 | Construção | Tradução |
 | --- | --- |
 | Variável | `v<N>_<nome>`, com `N` contando as declarações do nome; não colide com palavras reservadas, builtins ou helpers `_ox_*` e isola blocos independentes |
-| Promoção para `tronxo` | `float(...)` na declaração e na atribuição |
+| Promoção para `tronxo` | `_ox_tronxo(valor, linha)` na declaração e na atribuição, com proteção de conversão |
 | `/`, `//`, `%`, `**` | Helpers do runtime, com a linha de origem |
+| `+`, `-`, `*` com resultado `tronxo` | Helpers do runtime que rejeitam conversão impossível e resultado não finito, com a linha de origem |
 | `se_num_for` | `IfStmtNode` como único comando de `senao_bloco`; emitido como `elif` |
 | `num_para ate (c)` | `while not (c):` |
 | `arrodeia` | Inicialização, `while not (c):`, corpo e atualização no fim do corpo |
@@ -110,7 +111,7 @@ permitida entre números ou entre valores do mesmo tipo, e ordenação só entre
 | `//` em Python arredonda para baixo; `%` acompanha essa divisão. Com negativos, isso difere do truncamento para zero citado na OX-01 | Os helpers truncam para zero. A cópia entregue (§2.3) não explicita negativos: falta confirmar a regra |
 | Um `continue` em `while` Python pula o restante do corpo; uma tradução de `arrodeia` pode assim pular sua atualização | A atualização é emitida antes de cada `continue`. Falta confirmar o contrato de `arrodeia` |
 | A saída padrão de Python não expressa automaticamente `tronxo` com vírgula e três casas nem `papo` como `evera`/`pala` | `_ox_formatar_valor` aplica o formato. Falta confirmar arredondamento, separadores, término de linha e formatos de entrada |
-| Inteiros Python têm precisão arbitrária; reais e operações do destino podem não respeitar as faixas pretendidas na origem | Divisão real, promoção e `tronxo` de potência são preservados. Limites e precisão não estão definidos nem verificados |
+| Inteiros Python têm precisão arbitrária; reais e operações do destino podem não respeitar as faixas pretendidas na origem | Conversões para real e resultados reais não finitos têm diagnóstico localizado no [runtime](runtime.md). A faixa inteira e a precisão da linguagem continuam pendentes |
 | `and`/`or` em Python têm curto-circuito e retornam operandos; código auxiliar pode duplicar a avaliação de uma expressão | Operandos validados são `papo`, então o resultado também é. Cada expressão roda uma vez por caminho. Falta confirmar o curto-circuito |
 
 A [semântica](semantics.md#pontos-a-confirmar) mantém essas lacunas abertas.

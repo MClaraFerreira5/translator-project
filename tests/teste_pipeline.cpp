@@ -132,6 +132,14 @@ std::string ramos(int valor) {
 }
 
 void testes_visualizacao() {
+    compara_ast("real_cientifico", "tronxo r bota 100000000000000000000,0\n",
+                "Programa\n  Bloco\n    Declaracao tronxo r\n      Literal tronxo 1,0e+20\n");
+    compara_ast("real_cientifico_fracionario", "tronxo r bota 0,0000001\n",
+                "Programa\n  Bloco\n    Declaracao tronxo r\n      Literal tronxo 1,0e-07\n");
+    compara_ast("real_cientifico_mantissa", "tronxo r bota 125000000000000000000,0\n",
+                "Programa\n  Bloco\n    Declaracao tronxo r\n      Literal tronxo 1,25e+20\n");
+    compara_ast("real_sem_fracao", "tronxo r bota 2,0\n",
+                "Programa\n  Bloco\n    Declaracao tronxo r\n      Literal tronxo 2,0\n");
     compara_ast("precedencia", "inteiro r bota 2 + 3 * 4\n",
                 "Programa\n  Bloco\n    Declaracao inteiro r\n      Binario +\n        Literal inteiro 2\n"
                 "        Binario *\n          Literal inteiro 3\n          Literal inteiro 4\n");
