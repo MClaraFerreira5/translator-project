@@ -1,9 +1,9 @@
 # Arquitetura
 
 **Implementado:** o pipeline completo do núcleo, da CLI à execução do Python gerado.
-**Não suportado:** funções, procedimentos, `liso`, `balaio` e vetores. Veja o
-[estado por etapa](../README.md#estado-atual) e o
-[contrato da CLI e build](../README.md#contrato-da-cli-ox-02).
+**Não suportado:** funções, procedimentos, `liso`, `balaio` e vetores. Consulte o
+[estado da implementação](#estado-da-implementação), o
+[contrato da CLI](cli.md) e a [preparação do ambiente](preparacao.md).
 
 ## Pipeline
 
@@ -19,11 +19,10 @@ Código .oxe
 O destino vigente é **Python 3**; o tradutor é implementado em **C++17**. A mudança de alvo foi decidida pelo grupo na OX-01, seguindo a
 recomendação do professor para simplificar a geração e dispensar a compilação
 da linguagem-alvo. Menções históricas a C++ nas fontes permanecem preservadas.
-Flex e Bison serão usados conforme o [enunciado](references/projeto-disciplina.md).
+Flex e Bison são usados conforme o [enunciado](references/projeto-disciplina.md).
 O código C/C++ gerado pelo **Bison é a implementação do parser, não a AST**.
-O parser deverá construir explicitamente nós que representem as construções da
-Oxente Lang. Essa AST será reutilizada pela análise semântica e pela geração;
-construí-la e descartá-la não atende ao projeto.
+O parser constrói explicitamente nós que representam as construções da
+Oxente Lang. A análise semântica e a geração reutilizam essa AST.
 
 Uma IR de baixo nível separada, otimizações e backend de máquina não fazem parte
 do escopo obrigatório. A compilação em C++17 produz o tradutor; Python 3 executa
@@ -68,12 +67,12 @@ Artefatos ficam na árvore de build ignorada pelo Git.
 A OX-04 implementa o scanner em `infra.l`, tokens e contrato mínimo em `infra.y`,
 encapsulamento em `scanner.hpp`/`scanner.cpp` e inspeção em `tokens_main.cpp`.
 As OX-05 e OX-06 acrescentam a `infra.y` as expressões, os comandos, os blocos, os
-condicionais e os laços, com `oxente::parse` como ponto de entrada. O [contrato do scanner](../README.md#scanner-e-inspeção-de-tokens-ox-04)
-documenta propriedade de valores, localizações e limitações para OX-05/OX-07.
+condicionais e os laços, com `oxente::parse` como ponto de entrada. O [contrato do scanner](frontend.md)
+documenta propriedade de valores, localizações e limitações atuais.
 
 O runtime trata vírgula e três casas decimais na saída de `tronxo`, `papo` como
 `evera`/`pala`, divisão real mesmo com operandos inteiros, zero nas divisões,
-domínio da potência e entrada por tipo. Faixas numéricas ainda não são verificadas.
+domínio da potência e entrada por tipo. A faixa inteira continua pendente; conversões e resultados reais não finitos têm verificações no runtime.
 O destino Python 3 não deve alterar regras da linguagem por acidente.
 Os helpers de divisão e potência recebem a linha `.oxe` para os diagnósticos.
 
@@ -118,7 +117,7 @@ A [semântica](semantics.md#pontos-a-confirmar) mantém essas lacunas abertas.
 A escolha do destino não aprova implicitamente comportamentos de Python como
 regras da Oxente Lang.
 
-## Roteiro incremental
+## Estado da implementação
 
 | Etapa | Estado |
 | --- | --- |
@@ -131,4 +130,4 @@ regras da Oxente Lang.
 | Confirmar as lacunas de [tokens](tokens.md), [gramática](grammar.md) e [semântica](semantics.md) | Em aberto |
 | Funções e procedimentos | Somente após o núcleo funcional |
 
-Os [marcos da disciplina](../README.md#cronograma-de-2026) orientam as próximas etapas.
+Os marcos da disciplina permanecem no [enunciado](references/projeto-disciplina.md).

@@ -1,10 +1,11 @@
 # Regras semânticas
 
 Base: §§2 e 5–6 da [definição entregue](references/definicao-entregue.md).
-As regras abaixo orientam o analisador parcial da OX-09 e as etapas futuras.
+O analisador verifica o núcleo implementado; regras provisórias e extensões
+futuras estão identificadas abaixo.
 Consulte a [gramática](grammar.md) e os [casos de referência](../examples/README.md).
 
-## API implementada na OX-09
+## API implementada
 
 `oxente::SemanticAnalyzer`, em `src/semantic/SemanticAnalyzer.hpp`, recebe uma
 AST por `no.accept(analisador)`. O visitante verifica nomes, tipos e contexto de
@@ -41,7 +42,7 @@ usam ASTs manuais; as regressões de integração em `parser` exercitam também
 | Tipos dos operadores, atribuições e condições `papo` | Implementado em `SemanticAnalyzer` |
 | `canso`/`simbora` fora de laço | Implementado em `SemanticAnalyzer` (`contexto_invalido`) |
 | Zero em `/`, `//`, `%`, domínio de `**` e entrada inválida ou ausente | Implementado no runtime, com código de erro e linha |
-| Faixas numéricas de `inteiro` e `tronxo` | Não definido e não verificado |
+| Faixas numéricas | Faixa inteira pendente; conversões e resultados reais não finitos verificados no [runtime](runtime.md) |
 
 ## Declaração, inicialização e escopo
 
@@ -56,7 +57,7 @@ usam ASTs manuais; as regressões de integração em `parser` exercitam também
 
 A tabela de símbolos registra nome, tipo, escopo, localização da declaração e
 estado de inicialização. A análise percorre a AST, controlando escopos e contexto
-de laço. A persistência de associações para o gerador depende de integração futura.
+de laço. O gerador mantém seu próprio ambiente ao percorrer a mesma AST validada.
 
 ## Tipagem e operadores
 

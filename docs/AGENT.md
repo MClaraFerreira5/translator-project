@@ -12,7 +12,7 @@ Não substitua a versão entregue por rascunhos nem corrija a fonte silenciosame
 
 A Sprint 0 foi concluída. O projeto evolui por cards, de forma incremental, com
 validação proporcional e documentação do que efetivamente funciona. O
-[estado por etapa](../README.md#estado-atual) separa o que é implementado,
+[estado da implementação](architecture.md#estado-da-implementação) separa o que é implementado,
 planejado e não suportado. Cada card numerado `OX-n` corresponde à issue `#(n+1)`.
 
 ## Decisões e consistência
