@@ -1,0 +1,15 @@
+inteiro total bota 0
+arrodeia (inteiro i bota 1; ate i > 3; i bota i + 1) bora
+    vai_que (i == 2) bora
+        simbora
+    arremata
+    inteiro j bota 0
+    num_para ate (j == 5) bora
+        j bota j + 1
+        vai_que (j == 3) bora
+            canso
+        arremata
+        total bota total + 1
+    arremata
+arremata
+desembucha(total)

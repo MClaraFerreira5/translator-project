@@ -1,28 +1,50 @@
 # Oxente Lang
 
 Linguagem educacional do projeto da disciplina de Compiladores. A modalidade
-escolhida é um **tradutor Oxente Lang → Python 3**, com implementação planejada em
-**C++17**, usando **Flex** para análise léxica e **Bison** para análise sintática.
+escolhida é um **tradutor Oxente Lang → Python 3**, implementado em **C++17**,
+usando **Flex** para análise léxica e **Bison** para análise sintática.
 
-**Estado atual (OX-09):** build CMake, CLI, scanner Flex e parser Bison para
-expressões e comandos simples, com construção de AST e testes próprios. Há
-[análise semântica](docs/semantics.md#api-implementada-na-ox-09) e componentes
-independentes de escopos, diagnósticos e runtime. A CLI ainda não
-conecta essas etapas; os modos de análise e tradução permanecem não implementados.
+## Estado atual
 
-O pipeline planejado é: arquivo `.oxe` → Flex → Bison → AST explícita → análise
-semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
+O núcleo da linguagem está implementado: a CLI valida arquivos `.oxe` e gera Python 3
+para os programas válidos. Veja como [gerar e executar Python](#gerar-e-executar-python)
+e as [limitações conhecidas](#limitações-conhecidas).
+
+| Etapa | Estado | Onde |
+| --- | --- | --- |
+| Build, CLI (argumentos e códigos de saída) | Implementado | `CMakeLists.txt`, `src/main.cpp` |
+| Scanner Flex | Implementado | `src/frontend/infra.l`, `oxente-tokens` |
+| AST e contrato Visitor | Implementado | `src/ast/` |
+| Diagnósticos | Implementado | `src/common/` |
+| Tabela de símbolos, escopos, tipos e contexto de laços | Implementado | `src/semantic/` |
+| Gerador Python 3 | Implementado | `src/codegen/` |
+| Runtime Python | Implementado | `src/runtime/oxente_runtime.py` |
+| Parser do núcleo, com blocos, condicionais e laços | Implementado | `src/frontend/infra.y` |
+| Visualização da AST (`--dump-ast`) | Implementado | `src/ast/AstPrinter.cpp` |
+| `--check`, `--emit-python` | Implementado | `src/main.cpp` |
+| Funções e procedimentos | Não suportado; extensão após o núcleo | `aperreio`, `toma`, `sem_futuro` |
+| `liso` e `balaio`, vetores, IR, otimizações | Não suportado | — |
+
+## Arquitetura
+
+```text
+arquivo .oxe → Flex → Bison → AST explícita → análise semântica/tabela de
+símbolos → gerador Python 3 → execução com Python 3 e oxente_runtime
+```
+
+Detalhes da AST, do Visitor, da tabela de símbolos e das decisões de tradução estão
+em [docs/architecture.md](docs/architecture.md).
 
 A adoção de Python 3 como destino é uma decisão posterior do grupo, registrada
 na OX-01, seguindo a recomendação do professor: simplifica a geração e dispensa
-uma etapa de compilação da linguagem-alvo. O tradutor continua planejado em
-C++17 com Flex/Bison; os programas traduzidos serão código Python 3.
+uma etapa de compilação da linguagem-alvo.
 
 ## Preparação e build no Linux
 
-Pré-requisitos: compilador C++17 (GCC 8+ ou Clang com biblioteca C++17),
-CMake 3.16+, Make ou Ninja, Flex 2.6+ e Bison 3.0+. Python 3 será o destino
-do tradutor futuro; não é necessário para compilar ou testar esta infraestrutura.
+Pré-requisitos: compilador C++17 com `std::to_chars` para `double` (GCC 11+),
+CMake 3.16+, Make ou Ninja, Flex 2.6+, Bison 3.0+ e Python 3. Python é exigido
+quando os testes estão ativos e para executar os programas gerados; para compilar
+sem ele, configure com `-DBUILD_TESTING=OFF`.
 
 No Fedora:
 
@@ -46,12 +68,16 @@ ctest --test-dir build --output-on-failure
 ./build/oxente --help
 ```
 
+Os três primeiros comandos estão reunidos em `sh scripts/build-e-testes.sh`, que
+aceita a pasta de build como argumento. O mesmo script é usado pela CI em
+`.github/workflows/ci.yml`.
+
 CMake exige as ferramentas e informa dependências ausentes. A configuração dentro
 da árvore fonte é rejeitada: use sempre `-B build`. Fontes e headers gerados
 ficam em `build/generated/`; não devem ser versionados. Para refazer do zero,
-use uma nova pasta de build. CTest verifica argumentos, canais, códigos de saída,
-preservação de arquivos e configuração/compilação em uma árvore limpa separada.
-Os exemplos `.oxe` continuam referências manuais, sem validação pela linguagem.
+use uma nova pasta de build. CTest verifica cada etapa, a tradução de ponta a ponta
+e a configuração/compilação em uma árvore limpa separada. Veja a
+[suíte de testes](docs/test-suite.md).
 
 ## Preparação no Windows (WSL 2 + Ubuntu)
 
@@ -96,7 +122,8 @@ PowerShell. Com VS Code, instale a extensão WSL e abra o checkout nesse ambient
 Consulte a [instalação oficial do WSL](https://learn.microsoft.com/windows/wsl/install)
 se a virtualização ou instalação do Ubuntu exigir configuração adicional.
 A OX-02 foi testada em Linux; a instalação do WSL no Windows não foi executada
-neste ambiente de desenvolvimento.
+neste ambiente de desenvolvimento. Em build nativo com MSYS2, fora da rota
+documentada, o teste `lexer_harness` falha com "CR isolado"; os demais passam.
 
 ## Contrato da CLI (OX-02)
 
@@ -113,32 +140,57 @@ incompatíveis, múltiplas entradas e argumentos ausentes são erros.
 
 | Opção | Contrato e estado |
 | --- | --- |
-| `--check` | Validação futura; não implementado |
-| `--dump-ast` | Visualização futura da AST; não implementado |
-| `--emit-python` | Emissão futura de Python 3; não implementado |
-| `-o caminho`, `--output caminho` | Opcional, uma única vez e somente com `--emit-python`; não abre nem escreve saída nesta etapa |
+| `--check` | Valida o programa, sem gerar código |
+| `--dump-ast` | Exibe a AST como texto indentado em stdout, sem análise semântica |
+| `--emit-python` | Gera Python 3 em stdout ou no caminho de `-o` |
+| `-o caminho`, `--output caminho` | Opcional, uma única vez e somente com `--emit-python`; não pode ser a própria entrada |
 
 Caminhos de saída iniciados por hífen devem usar `./nome`. A sintaxe
-`--output=caminho` não é suportada. O destino futuro sem `-o` permanece pendente;
-esta versão sempre falha explicitamente nos três modos, sem gerar arquivos nem
-invocar o parser provisório. A existência/extensão da entrada é conferida antes
-de informar a capacidade pendente; isso não valida seu conteúdo.
+`--output=caminho` não é suportada. A escrita em stdout quando não há `-o` é uma
+escolha provisória.
 
 | Código | Significado |
 | --- | --- |
-| 0 | Ajuda exibida em stdout |
+| 0 | Ajuda ou AST exibida em stdout |
+| 1 | Erro léxico, sintático ou semântico no programa |
 | 2 | Erro de argumentos/uso, incluindo extensão inválida |
-| 3 | Entrada inexistente, não regular ou impossível de abrir |
-| 4 | Funcionalidade não implementada |
+| 3 | Entrada inexistente, não regular ou impossível de abrir; saída impossível de escrever |
 
 Erros vão para stderr, sem saída normal em stdout. São códigos iniciais da CLI,
 sem antecipar a padronização de diagnósticos da OX-10. Por exemplo:
 
 ```bash
-./build/oxente --check examples/valid/calculo.oxe
-# stderr: oxente: --check: não implementado; nenhum programa foi analisado ou traduzido.
-# código de saída: 4
+./build/oxente --check examples/invalid/semantico-tipo.oxe
+# stderr: oxente [semântico]: examples/invalid/semantico-tipo.oxe:2:1: erro 'misturou_as_coisas': ...
+# código de saída: 1
 ```
+
+`--dump-ast` mostra um nó por linha, e a indentação indica os filhos. Um `.oxe` com
+`inteiro r bota 2 + 3 * 4` gera:
+
+```text
+Programa
+  Bloco
+    Declaracao inteiro r
+      Binario +
+        Literal inteiro 2
+        Binario *
+          Literal inteiro 3
+          Literal inteiro 4
+```
+
+## Gerar e executar Python
+
+```bash
+./build/oxente --emit-python examples/valid/calculo.oxe -o calculo.py
+python3 calculo.py
+# Resultado 14
+# Com parenteses 20
+```
+
+Sem `-o`, o Python vai para stdout. O `.py` gerado já contém o runtime, então roda
+sozinho, sem `PYTHONPATH` nem outros arquivos. Só programas válidos geram saída, e um
+arquivo de saída já existente é preservado quando o programa tem erro.
 
 ## Scanner e inspeção de tokens (OX-04)
 
@@ -163,28 +215,26 @@ intervalo `linha:coluna-linha:coluna` e lexema entre aspas, com caracteres de
 controle escapados **na saída de inspeção**. Isso não define escapes da linguagem.
 Códigos: 0 tokenização concluída, 1 erro léxico ou caso documental pendente,
 2 uso incorreto, 3 falha de abertura/leitura. Tokenização concluída não é validação
-sintática/semântica. A CLI `oxente` mantém os três modos não implementados.
+sintática/semântica.
 
 A integração conserva o esqueleto C do Bison e o scanner C do Flex compilados
 como C++17, sem `libfl`, com prefixo `oxinfra`. O scanner agora é reentrante e o
-parser usa `api.pure full`, `%locations` e `oxente::ParserContext*`.
-`src/frontend/infra.y` é a fonte única dos tokens e contém o parser parcial
-da OX-05, acessível pela API descrita abaixo.
+parser usa `api.pure full`, `%locations` e o parâmetro `ParserContext*`.
+`src/frontend/infra.y` é a fonte única dos tokens. `oxente::parse` constrói a AST
+do núcleo da linguagem; entrada vazia ou só com linhas vazias é rejeitada.
 
 `oxente::Scanner` em `src/frontend/scanner.hpp` encapsula o estado Flex e empresta
 o `FILE*` do consumidor. Cada token não EOF entrega um `std::string*` em
-`OXINFRASTYPE::texto`: **o consumidor deve liberá-lo**. O Bison já declara
-`%destructor` e ações que liberam os textos recebidos. Na interface do parser,
-`proximo_significativo` elimina espaços e libera os lexemas de palavras e
-operadores sem valor semântico; os demais passam às ações ou aos destruidores.
-Na API bruta `proximo`, todos os lexemas são preservados,
+`OXINFRASTYPE::texto`: **o consumidor deve liberá-lo**. No parser, as ações movem
+ou liberam esses valores, e `proximo_significativo` libera os tokens que não
+carregam valor. Todos os lexemas são preservados,
 inclusive zeros iniciais, vírgula decimal e delimitadores de texto, sem converter
 para `int`/`double` nem fixar limites numéricos ou espaços de borda do valor textual.
 
 Localizações começam em 1 e usam fim exclusivo. Cada byte ASCII e cada tabulação
 avançam uma coluna de origem; CRLF avança uma linha, como LF. EOF tem intervalo
-vazio no cursor e não cria `NL` artificial: o parser o aceita como
-término da última instrução. `ErroLexico` carrega intervalo e mensagem; a análise
+vazio no cursor e `proximo` não cria `NL` artificial; `proximo_significativo`, usado
+pelo parser, entrega uma quebra antes do EOF para encerrar a última instrução. `ErroLexico` carrega intervalo e mensagem; a análise
 para no primeiro erro e o consumidor deve abandonar essa instância do scanner.
 
 Como espaços significativos e o tratamento sintático de comentários permanecem
@@ -209,7 +259,7 @@ sua utilização será decidida pelo parser. As reservadas da extensão
 
 Os testes de lexer conferem tokens, lexemas, início/fim, reservadas, operadores,
 LF/CRLF/EOF, comentários, textos e falhas. Também exercitam instâncias isoladas,
-rejeição de entradas vazias/incompletas pelo parser e códigos/canais do harness. As pendências
+rejeição de entrada vazia ou incompleta pelo parser e códigos/canais do harness. As pendências
 continuam em [tokens](docs/tokens.md#pontos-a-confirmar); a OX-04 não as resolve.
 
 ## Parser de expressões e comandos simples (OX-05)
@@ -227,7 +277,8 @@ O subconjunto aceita declarações inicializadas dos quatro tipos, atribuições
 exigem LF ou CRLF; linhas vazias são aceitas e EOF termina o último comando.
 Expressões não continuam em outra linha. Programa e bloco principal recebem a
 posição do primeiro comando, ignorando linhas iniciais vazias. Entrada vazia
-continua inválida. Condicionais, laços e funções não são reconhecidos nesta etapa.
+continua inválida. A OX-06 estende esse subconjunto com condicionais e laços;
+funções continuam fora do núcleo.
 
 A AST atual armazena números como `int` e `double`. A conversão preserva a vírgula
 decimal na origem; literais que não cabem nessa representação produzem diagnóstico
@@ -239,9 +290,22 @@ do sinal. As operações são representadas em nós, sem avaliação pelo parser
 Os testes `parser` e `scope` exercitam a API real, incluindo agrupamentos da AST,
 términos, argumentos de saída, localização e falhas com pilha parcialmente
 construída. O teste manual da AST também conserva o construtor de saída com um
-argumento. A CLI, espaços significativos e comentários de bloco no meio de
-expressões permanecem fora desta integração; as pendências documentais continuam
-válidas.
+argumento. Espaços significativos e comentários de bloco no meio de expressões
+continuam pendentes; o estado da CLI está registrado na tabela de etapas acima.
+
+## Limitações conhecidas
+
+- As regras que a especificação deixa em aberto foram implementadas de forma
+  provisória: veja a [lista](docs/architecture.md#gerador-python-3-ox-11-e-ox-12) e
+  a [gramática](docs/grammar.md#estado-da-implementação).
+- Literais `inteiro` precisam caber em um `int` de C++; acima disso a CLI responde com
+  erro. As faixas numéricas da linguagem ainda não foram definidas nem são verificadas
+  durante a execução.
+- `tronxo` usa o arredondamento padrão de Python ao exibir três casas decimais.
+- Erros de execução informam a linha, sem coluna.
+- Em build nativo no Windows com MSYS2, o teste `lexer_harness` falha; a rota
+  documentada para Windows é o WSL.
+- Funções, procedimentos, `liso`, `balaio` e vetores não são suportados.
 
 ## Escopo
 
@@ -261,6 +325,7 @@ IR separada da AST, backend de máquina e otimizações não são requisitos do 
 .
 ├── README.md
 ├── AGENTS.md
+├── .github/workflows/
 ├── docs/
 │   ├── AGENT.md
 │   ├── language-spec.md
@@ -268,6 +333,7 @@ IR separada da AST, backend de máquina e otimizações não são requisitos do 
 │   ├── grammar.md
 │   ├── semantics.md
 │   ├── architecture.md
+│   ├── test-suite.md
 │   └── references/
 ├── examples/
 │   ├── README.md
@@ -286,9 +352,9 @@ IR separada da AST, backend de máquina e otimizações não são requisitos do 
 
 Leia a [especificação consolidada](docs/language-spec.md), o
 [catálogo de tokens](docs/tokens.md), o [esboço de gramática](docs/grammar.md),
-as [regras semânticas](docs/semantics.md) e a [arquitetura futura](docs/architecture.md).
-Os [exemplos e resultados esperados](examples/README.md) são referências manuais
-para implementação futura; ainda não foram executados por um tradutor.
+as [regras semânticas](docs/semantics.md) e a [arquitetura](docs/architecture.md).
+Os [exemplos e resultados esperados](examples/README.md) são verificados pelos
+testes de ponta a ponta.
 
 As [fontes e sua procedência](docs/references/README.md) estão preservadas para
 consulta. Colaboradores e agentes devem ler [AGENTS.md](AGENTS.md) e

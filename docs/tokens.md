@@ -6,6 +6,17 @@ O [contrato técnico e as limitações](../README.md#scanner-e-inspeção-de-tok
 distinguem reconhecimento léxico de suporte sintático/semântico.
 Consulte a [especificação](language-spec.md) e a [gramática inicial](grammar.md).
 
+## Estado da implementação
+
+`src/frontend/infra.l` reconhece todas as palavras, literais e operadores deste
+catálogo, e `src/frontend/infra.y` é a fonte única dos nomes de token. Além deles,
+o scanner emite `NL` e `ESPACO`, sem tokens de indentação. `=` isolado e aspas são
+caracteres não reconhecidos. `liso` e `balaio` não são reservadas, e as palavras
+de funções são reconhecidas sem suporte sintático. Texto vazio, espaços múltiplos
+de borda, escapes, texto multilinha, CR isolado, comentário de linha no EOF e
+número adjacente a identificador produzem o diagnóstico "caso pendente na
+especificação".
+
 ## Caracteres, nomes e palavras
 
 O código-fonte usa ASCII: letras, algarismos, sublinhado, espaços, tabulações,

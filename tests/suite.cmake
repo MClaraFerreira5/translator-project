@@ -119,13 +119,17 @@ testar_caso("val-precedencia-logica" "examples/valid/precedencia-logica.oxe" "va
 testar_caso("val-operadores-longos" "examples/valid/operadores-longos.oxe" "valido" "semantica" "")
 testar_caso("val-aninhamento" "examples/valid/aninhamento.oxe" "valido" "semantica" "")
 testar_caso("val-escopo-independente" "examples/valid/escopo-independente.oxe" "valido" "semantica" "")
+testar_caso("val-lacos-aninhados" "examples/valid/lacos-aninhados.oxe" "valido" "semantica" "")
 
 # Casos Inválidos Sintáticos
-testar_caso("inval-sintatico-operando" "examples/invalid/sintatico-operando.oxe" "invalido" "sintatica" "erro_sintatico")
-testar_caso("inval-sintatico-parentese-desbalanceado" "examples/invalid/sintatico-parentese-desbalanceado.oxe" "invalido" "sintatica" "erro_sintatico")
-testar_caso("inval-sintatico-bloco-nao-fechado" "examples/invalid/sintatico-bloco-nao-fechado.oxe" "invalido" "sintatica" "erro_sintatico")
-testar_caso("inval-sintatico-comparacao-encadeada" "examples/invalid/sintatico-comparacao-encadeada.oxe" "invalido" "sintatica" "erro_sintatico")
-testar_caso("inval-sintatico-tipo-sem-identificador" "examples/invalid/sintatico-tipo-sem-identificador.oxe" "invalido" "sintatica" "erro_sintatico")
+testar_caso("inval-sintatico-operando" "examples/invalid/sintatico-operando.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-parentese-desbalanceado" "examples/invalid/sintatico-parentese-desbalanceado.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-bloco-nao-fechado" "examples/invalid/sintatico-bloco-nao-fechado.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-comparacao-encadeada" "examples/invalid/sintatico-comparacao-encadeada.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-tipo-sem-identificador" "examples/invalid/sintatico-tipo-sem-identificador.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-ramo-sem-vai-que" "examples/invalid/sintatico-ramo-sem-vai-que.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-arrodeia-sem-ate" "examples/invalid/sintatico-arrodeia-sem-ate.oxe" "invalido" "sintatica" "sintaxe_invalida")
+testar_caso("inval-sintatico-bora-sem-quebra" "examples/invalid/sintatico-bora-sem-quebra.oxe" "invalido" "sintatica" "sintaxe_invalida")
 
 # Casos Inválidos Semânticos
 testar_caso("inval-semantico-nao-declarado" "examples/invalid/semantico-nao-declarado.oxe" "invalido" "semantica" "nome_nao_declarado")

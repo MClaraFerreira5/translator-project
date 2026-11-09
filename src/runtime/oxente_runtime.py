@@ -16,7 +16,8 @@ def _ox_formatar_valor(v):
     return str(v)
 
 def _ox_desembucha(*args):
-    saida = "".join(_ox_formatar_valor(a) for a in args)
+    # Um espaço entre argumentos, como em "Resultado 14" no exemplo 4.1 da proposta.
+    saida = " ".join(_ox_formatar_valor(a) for a in args)
     print(saida)
 
 # 2. Entrada (diga_ai)
@@ -37,7 +38,10 @@ def _ox_diga_ai(tipo: str, linha: int = None):
     elif tipo == "tronxo":
         try:
             # Aceita tanto vírgula quanto ponto na entrada
-            return float(texto_limpo.replace(",", "."))
+            valor = float(texto_limpo.replace(",", "."))
+            if not math.isfinite(valor):
+                raise ValueError
+            return valor
         except ValueError:
             _ox_erro("entrada_invalida", f"Esperava número real (tronxo), mas recebeu '{texto}'.", linha)
 
@@ -56,24 +60,60 @@ def _ox_diga_ai(tipo: str, linha: int = None):
         _ox_erro("tipo_desconhecido", f"Tipo '{tipo}' não suportado na leitura.", linha)
 
 # 3. Operações Aritméticas e Truncamento
+def _ox_real_finito(valor, linha=None):
+    if isinstance(valor, float) and not math.isfinite(valor):
+        _ox_erro("real_fora_dos_limites", "Resultado real não finito.", linha)
+    return valor
+
+def _ox_tronxo(valor, linha=None):
+    try:
+        resultado = float(valor)
+    except OverflowError:
+        _ox_erro("real_fora_dos_limites", "Inteiro fora da representação real.", linha)
+    return _ox_real_finito(resultado, linha)
+
+def _ox_soma(a, b, linha=None):
+    try:
+        resultado = a + b
+    except OverflowError:
+        _ox_erro("real_fora_dos_limites", "Conversão numérica na soma fora dos limites reais.", linha)
+    return _ox_real_finito(resultado, linha)
+
+def _ox_sub(a, b, linha=None):
+    try:
+        resultado = a - b
+    except OverflowError:
+        _ox_erro("real_fora_dos_limites", "Conversão numérica na subtração fora dos limites reais.", linha)
+    return _ox_real_finito(resultado, linha)
+
+def _ox_mul(a, b, linha=None):
+    try:
+        resultado = a * b
+    except OverflowError:
+        _ox_erro("real_fora_dos_limites", "Conversão numérica na multiplicação fora dos limites reais.", linha)
+    return _ox_real_finito(resultado, linha)
+
 def _ox_div(a, b, linha: int = None):
     if b == 0:
         _ox_erro("dividiu_por_nada", "Divisão real por zero.", linha)
-    return float(a) / float(b)
+    return _ox_real_finito(_ox_tronxo(a, linha) / _ox_tronxo(b, linha), linha)
+
+def _ox_quociente_truncado(a: int, b: int):
+    # Truncamento em direção a zero, somente com inteiros: int(a / b) passaria
+    # por float e perderia precisão em valores acima de 2**53.
+    q = abs(a) // abs(b)
+    return q if (a < 0) == (b < 0) else -q
 
 def _ox_div_int(a: int, b: int, linha: int = None):
     if b == 0:
         _ox_erro("dividiu_por_nada", "Divisão inteira por zero.", linha)
-    # Truncamento em direção a zero (igual C++: int(a / b))
-    # Em Python: int(a / b) trunca em direção a zero para positivos e negativos
-    return int(a / b)
+    return _ox_quociente_truncado(a, b)
 
 def _ox_mod(a: int, b: int, linha: int = None):
     if b == 0:
         _ox_erro("dividiu_por_nada", "Resto de divisão por zero.", linha)
     # Coerente com o quociente truncado: a = (q * b) + r  =>  r = a - (q * b)
-    q = int(a / b)
-    return a - (q * b)
+    return a - (_ox_quociente_truncado(a, b) * b)
 
 def _ox_pot(a, b, linha: int = None):
     try:

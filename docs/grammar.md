@@ -1,10 +1,32 @@
 # Gramática inicial e abordagem sintática
 
 Base: §§2–5 da [definição entregue](references/definicao-entregue.md).
-Esta EBNF é um **esboço documental**, não uma gramática completa. A implementação
-parcial da OX-05 está em [infra.y](../src/frontend/infra.y) e cobre expressões,
-declarações, atribuições, entrada e saída. Os [tokens](tokens.md) e a
+Esta EBNF é um **esboço documental**; a gramática implementada, sem conflitos no
+Bison, está em `src/frontend/infra.y`. Os [tokens](tokens.md) e a
 [semântica](semantics.md) complementam as regras de estrutura.
+
+## Estado da implementação
+
+`src/frontend/infra.y` implementa todas as construções do núcleo neste esboço,
+inclusive blocos aninhados, condicionais, `num_para`, `arrodeia`, `canso` e `simbora`.
+Duas instruções exigem ao menos uma quebra de linha entre si, e EOF encerra a última.
+
+Três pontos em aberto foram implementados de forma **provisória**: blocos vazios são
+aceitos, linhas em branco e comentários podem separar os ramos de um condicional, e
+`arrodeia` segue a forma abaixo. `canso` e `simbora` são aceitos em qualquer lugar
+pelo parser; a restrição a laços é semântica.
+
+A AST construída é:
+
+| Construção | Representação esperada na AST |
+| --- | --- |
+| `se_num_for` | `IfStmtNode` como único comando do `senao_bloco` do ramo anterior |
+| `pois_pronto` | `senao_bloco` do último ramo |
+| `num_para ate (c)` | `WhileStmtNode`, com `c` como condição de parada |
+| `arrodeia` | `ForStmtNode`, com inicialização, condição de parada, atualização e corpo |
+| `desembucha(a; b)` | `OutputStmtNode` com um item em `argumentos` por expressão |
+| `abs(e)` | `UnaryExprNode` com `UnaryOp::Abs` |
+| Texto | `LiteralExprNode` só com o conteúdo, sem `vei` e `tendeu` |
 
 ## Notação e limites
 
@@ -56,7 +78,8 @@ ramos de um mesmo condicional, e não autoriza cabeçalhos partidos em várias l
 ## Esboço pendente de `arrodeia`
 
 A tabela final fornece `arrodeia (...; ate ...; ...)`; o corpo prevê
-inicialização, parada e atualização. Uma concretização **a confirmar** seria:
+inicialização, parada e atualização. O parser implementa esta concretização, ainda
+**a confirmar**:
 
 ```ebnf
 para           = "arrodeia", "(", inicio_para, ";", "ate", expressao,
@@ -67,8 +90,7 @@ inicio_para    = declaracao | atribuicao ;
 Não se considera aprovada a alternativa declaração/atribuição, a obrigatoriedade
 de cada campo ou a ausência de parênteses adicionais na condição. Também é
 necessário confirmar escopo do inicializador e destino de `simbora` na atualização.
-Não há exemplo classificado como válido para essa forma enquanto essas decisões
-estiverem abertas. `ate` expressa parada, e não condição para continuar.
+`examples/valid/lacos-aninhados.oxe` exercita a forma implementada. `ate` expressa parada, e não condição para continuar.
 
 ## Expressões: esboço por níveis
 

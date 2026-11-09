@@ -1,4 +1,4 @@
-# Regras semânticas previstas
+# Regras semânticas
 
 Base: §§2 e 5–6 da [definição entregue](references/definicao-entregue.md).
 As regras abaixo orientam o analisador parcial da OX-09 e as etapas futuras.
@@ -9,7 +9,8 @@ Consulte a [gramática](grammar.md) e os [casos de referência](../examples/READ
 `oxente::SemanticAnalyzer`, em `src/semantic/SemanticAnalyzer.hpp`, recebe uma
 AST por `no.accept(analisador)`. O visitante verifica nomes, tipos e contexto de
 laços; não avalia expressões nem gera Python. Os tipos resolvidos ficam em
-`ExprNode::tipo_calculado`. A CLI ainda não chama esse analisador.
+`ExprNode::tipo_calculado`. A CLI chama esse analisador em `--check` e
+`--emit-python`; `--dump-ast` faz apenas a análise sintática.
 
 Todos os argumentos de saída são percorridos na ordem da AST. Uma declaração
 sem inicializador é rejeitada na posição da declaração com
@@ -29,9 +30,18 @@ geração. A reutilização do visitante após exceção ainda não tem contrato
 o consumidor deve descartá-lo nessa situação.
 
 As matrizes pendentes de comparação, os detalhes de `arrodeia` e os metadados
-adicionais para o gerador não são definidos por esta API. Os testes `semantic`
+adicionais para o gerador não são definidos por esta API. O gerador mantém seu
+próprio ambiente de nomes e tipos ao percorrer a AST validada. Os testes `semantic`
 usam ASTs manuais; as regressões de integração em `parser` exercitam também
 `oxente::parse` seguido pelo analisador.
+
+| Regra | Estado |
+| --- | --- |
+| Declaração antes do uso, inicializador antes do nome, duplicação, sombreamento e nome de bloco encerrado | Implementado em `SemanticAnalyzer` e `SymbolTable` |
+| Tipos dos operadores, atribuições e condições `papo` | Implementado em `SemanticAnalyzer` |
+| `canso`/`simbora` fora de laço | Implementado em `SemanticAnalyzer` (`contexto_invalido`) |
+| Zero em `/`, `//`, `%`, domínio de `**` e entrada inválida ou ausente | Implementado no runtime, com código de erro e linha |
+| Faixas numéricas de `inteiro` e `tronxo` | Não definido e não verificado |
 
 ## Declaração, inicialização e escopo
 
@@ -65,7 +75,9 @@ de laço. A persistência de associações para o gerador depende de integraçã
 
 As regras numéricas de promoção orientam a leitura da tabela; a matriz exata de
 comparações (inclusive igualdade de textos/booleanos) não foi explicitada na
-fonte. Os exemplos usam comparação entre inteiros. Não inferir suporte a ordenar
+fonte. Os exemplos usam comparação entre inteiros. A implementação aceita, de forma
+provisória, igualdade entre números ou valores do mesmo tipo, e ordenação só entre
+números. Não inferir suporte a ordenar
 textos ou comparar tipos distintos. Não há concatenação: `+` é numérico.
 
 Não são aceitas conversões implícitas de `tronxo` para `inteiro`, de texto para
@@ -78,15 +90,18 @@ número ou de número para `papo`. `evera` e `pala` são os únicos literais boo
 `arrodeia` também usa parada, mas seus detalhes estão pendentes na [gramática](grammar.md).
 
 `canso` interrompe uma repetição e `simbora` pula uma iteração; fora de laços
-constituem erro semântico. O vínculo em laços aninhados e a passagem pela
-atualização de `arrodeia` devem ser explicitados antes de implementar.
+constituem erro semântico. O gerador vincula ambos ao laço mais interno, executa
+a atualização de `arrodeia` em `simbora` e não a executa em `canso`. A
+[arquitetura](architecture.md#gerador-python-3-ox-11-e-ox-12) registra o que disso
+é provisório.
 
 `diga_ai` exige identificador declarado e entrada compatível com seu tipo.
 `desembucha` aceita expressões em argumentos separados por `;`. Inteiros são
 exibidos sem decimais; `tronxo`, com vírgula e três casas decimais por padrão.
 A saída de referência `desembucha(10; vei pontos tendeu)` combina argumentos
-sem concatenação. Separadores, término de saída e entrada de cada tipo precisam
-de especificação precisa; os exemplos documentam valores ou ramos esperados.
+sem concatenação. O runtime separa os argumentos com um espaço e termina com
+quebra de linha, de forma provisória; separadores, término de saída e entrada de
+cada tipo ainda precisam de especificação precisa.
 
 ## Diagnósticos e momento de detecção
 
@@ -106,13 +121,16 @@ de múltiplos erros é possibilidade futura. Mensagens devem indicar localizaç�
 - Incompatibilidade: `misturou_as_coisas`, com tipo esperado e encontrado.
 - Nome duplicado: `valor_sem_pe_nem_cabeca`.
 - Zero em `/`, `//` ou `%`: interromper com `dividiu_por_nada`, operação e linha
-  de origem. O gerador deverá inserir verificações; não delegar o diagnóstico
-  simplesmente ao interpretador Python 3.
+  de origem. O gerador chama helpers do runtime que fazem essa verificação, sem
+  delegar o diagnóstico ao interpretador Python 3.
 
 Operações só são válidas dentro das faixas dos tipos escolhidos. A implementação
 deverá documentar limites e verificar operações para rejeitar valores fora da
 faixa e resultados reais não finitos, mesmo que Python aceite inteiros maiores.
-Larguras de tipos, mensagens desses erros e detalhes de arredondamento ainda
+O runtime rejeita entradas reais não finitas, resultados não finitos de
+`+`, `-`, `*`, `/` e `**`, e falhas de conversão de inteiro para real com
+diagnóstico localizado. Consulte os códigos e limites em
+[runtime](runtime.md). Larguras de tipos e detalhes de arredondamento ainda
 não foram decididos. Não há vetores/indexação,
 portanto acesso fora dos limites não integra esta versão.
 
@@ -142,7 +160,8 @@ arremata
 ```
 
 Os arquivos em [examples](../examples/README.md) isolam outras falhas e resultados
-esperados. Não foram executados nem submetidos a um verificador da linguagem.
+esperados. O teste `e2e` traduz e executa os válidos e confere o diagnóstico dos
+inválidos.
 
 ## Extensão futura de funções
 
@@ -158,8 +177,8 @@ extensão existir. `toma` e `sem_futuro` não acrescentam instruções ao núcle
 - Curto-circuito de `e`/`ou` e ordem de avaliação de operandos/argumentos.
 - Regra de divisão inteira e resto para negativos: a OX-01 cita truncamento
   para zero como regra original, mas o §2.3 da cópia entregue não o explicita.
-  Confirmar com o grupo; Python usa piso, que difere para quocientes negativos
-  não exatos. Confirmar também o domínio detalhado de `**`.
+  O runtime trunca para zero; confirmar com o grupo. Confirmar também o domínio
+  detalhado de `**`.
 - Faixas numéricas, precisão, arredondamento para três casas e diagnósticos de
   overflow/resultado não finito. Não impor limites do C++ ou a precisão
   arbitrária dos inteiros Python como regra aprovada.
@@ -169,7 +188,6 @@ extensão existir. `toma` e `sem_futuro` não acrescentam instruções ao núcle
   retorno em todos os caminhos na extensão futura.
 - `liso`/`balaio` permanecem sem gramática, tipo e comportamento, fora do núcleo.
 
-A geração planejada tem como destino Python 3. As diferenças de escopo,
-operadores, avaliação e entrada/saída estão registradas nos
-[riscos da tradução](architecture.md#riscos-da-tradução-para-python-3);
-nenhuma solução de runtime está implementada.
+O destino da geração é Python 3. As diferenças de escopo, operadores, avaliação
+e entrada/saída, e como cada uma é tratada, estão nos
+[riscos da tradução](architecture.md#riscos-da-tradução-para-python-3).

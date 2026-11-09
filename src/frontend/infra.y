@@ -108,46 +108,114 @@ static LiteralExprNode* literal_numerico(oxente::ParserContext* ctx,
 %destructor { delete $$; } <lista_expr>
 
 %type <tipo_dado> tipo
-%type <bloco> bloco_instrucoes
-%type <stmt> instrucao declaracao atribuicao entrada saida
+%type <bloco> instrucoes corpo bloco senao_opcional
+%type <stmt> instrucao simples condicional enquanto para inicio_para declaracao atribuicao entrada saida
 %type <lista_expr> argumentos
 %type <expr> expressao disjuncao conjuncao negacao comparacao soma produto unario potencia primario
 
 %%
 
 programa:
-    linhas_iniciais bloco_instrucoes {
-        auto loc = $2->loc;
-        ctx->raiz = std::make_unique<ProgramNode>(std::unique_ptr<BlockStmtNode>($2), loc);
+    instrucoes {
+        ctx->raiz = std::make_unique<ProgramNode>(std::unique_ptr<BlockStmtNode>($1), $1->loc);
+    }
+  | linhas instrucoes {
+        ctx->raiz = std::make_unique<ProgramNode>(std::unique_ptr<BlockStmtNode>($2), $2->loc);
     }
   ;
 
-linhas_iniciais:
-    %empty
-  | linhas_iniciais NL { delete $2; }
+linhas:
+    NL { delete $1; }
+  | linhas NL { delete $2; }
   ;
 
-bloco_instrucoes:
-    bloco_instrucoes NL {
-        delete $2;
-        $$ = $1;
-    }
-  | bloco_instrucoes NL instrucao {
-        delete $2;
-        $$ = $1;
-        $$->add(std::unique_ptr<StmtNode>($3));
-    }
-  | instrucao {
+instrucoes:
+    instrucao {
         $$ = new BlockStmtNode($1->loc);
         $$->add(std::unique_ptr<StmtNode>($1));
     }
+  | instrucoes instrucao {
+        $$ = $1;
+        $$->add(std::unique_ptr<StmtNode>($2));
+    }
   ;
 
+/* Cada instrução consome as quebras que a encerram; o scanner entrega uma
+   quebra final quando o arquivo termina sem ela. Assim, depois de arremata e
+   das linhas em branco, o próximo token decide se o condicional continua. */
 instrucao:
+    simples linhas { $$ = $1; }
+  | condicional    { $$ = $1; }
+  | enquanto       { $$ = $1; }
+  | para           { $$ = $1; }
+  ;
+
+simples:
     declaracao   { $$ = $1; }
   | atribuicao   { $$ = $1; }
   | entrada      { $$ = $1; }
   | saida        { $$ = $1; }
+  | CANSO {
+        oxente::SourceLocation loc{@$.first_line, @$.first_column};
+        $$ = new BreakStmtNode(loc);
+    }
+  | SIMBORA {
+        oxente::SourceLocation loc{@$.first_line, @$.first_column};
+        $$ = new ContinueStmtNode(loc);
+    }
+  ;
+
+bloco:
+    BORA linhas corpo ARREMATA linhas {
+        $$ = $3;
+        $$->loc = oxente::SourceLocation{@1.first_line, @1.first_column};
+    }
+  ;
+
+corpo:
+    %empty { $$ = new BlockStmtNode(); }
+  | instrucoes { $$ = $1; }
+  ;
+
+condicional:
+    VAI_QUE ABRE_PAR expressao FECHA_PAR bloco senao_opcional {
+        oxente::SourceLocation loc{@$.first_line, @$.first_column};
+        $$ = new IfStmtNode(std::unique_ptr<ExprNode>($3), std::unique_ptr<BlockStmtNode>($5),
+                            std::unique_ptr<BlockStmtNode>($6), loc);
+    }
+  ;
+
+/* se_num_for vira um IfStmtNode como único comando do senao_bloco anterior. */
+senao_opcional:
+    %empty { $$ = nullptr; }
+  | POIS_PRONTO bloco { $$ = $2; }
+  | SE_NUM_FOR ABRE_PAR expressao FECHA_PAR bloco senao_opcional {
+        oxente::SourceLocation loc{@1.first_line, @1.first_column};
+        $$ = new BlockStmtNode(loc);
+        $$->add(std::make_unique<IfStmtNode>(std::unique_ptr<ExprNode>($3),
+                                             std::unique_ptr<BlockStmtNode>($5),
+                                             std::unique_ptr<BlockStmtNode>($6), loc));
+    }
+  ;
+
+enquanto:
+    NUM_PARA ATE ABRE_PAR expressao FECHA_PAR bloco {
+        oxente::SourceLocation loc{@$.first_line, @$.first_column};
+        $$ = new WhileStmtNode(std::unique_ptr<ExprNode>($4), std::unique_ptr<BlockStmtNode>($6), loc);
+    }
+  ;
+
+para:
+    ARRODEIA ABRE_PAR inicio_para PONTO_VIRGULA ATE expressao PONTO_VIRGULA atribuicao FECHA_PAR bloco {
+        oxente::SourceLocation loc{@$.first_line, @$.first_column};
+        $$ = new ForStmtNode(std::unique_ptr<StmtNode>($3), std::unique_ptr<ExprNode>($6),
+                             std::unique_ptr<StmtNode>($8), std::unique_ptr<BlockStmtNode>($10), loc);
+    }
+  ;
+
+inicio_para:
+    declaracao { $$ = $1; }
+  | atribuicao { $$ = $1; }
   ;
 
 tipo:

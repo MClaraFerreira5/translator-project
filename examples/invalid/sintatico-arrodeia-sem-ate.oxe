@@ -1,0 +1,3 @@
+arrodeia (inteiro i bota 0; i > 3; i bota i + 1) bora
+    desembucha(i)
+arremata

@@ -23,7 +23,13 @@ target_include_directories(oxente_frontend PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend"
   )
-add_executable(oxente src/main.cpp)
+# O runtime é embutido no tradutor para que o .py gerado rode sozinho.
+file(READ src/runtime/oxente_runtime.py RUNTIME_PYTHON)
+configure_file(src/runtime/oxente_runtime_embutido.hpp.in
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/oxente_runtime_embutido.hpp" @ONLY)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/runtime/oxente_runtime.py)
+add_executable(oxente src/main.cpp src/ast/AstPrinter.cpp src/codegen/PythonGenerator.cpp)
+target_include_directories(oxente PRIVATE src/semantic)
 target_link_libraries(oxente PRIVATE oxente_frontend)
 add_executable(oxente-tokens src/frontend/tokens_main.cpp)
 target_link_libraries(oxente-tokens PRIVATE oxente_frontend)
@@ -65,4 +71,25 @@ if(BUILD_TESTING)
   target_link_libraries(test-semantic PRIVATE oxente_frontend)
   target_include_directories(test-semantic PRIVATE src src/common src/ast src/semantic)
   add_test(NAME semantic COMMAND test-semantic)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_executable(teste-codegen tests/test_codegen.cpp src/codegen/PythonGenerator.cpp)
+  target_include_directories(teste-codegen PRIVATE src)
+  add_test(NAME codegen COMMAND teste-codegen "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime" "${CMAKE_CURRENT_BINARY_DIR}/teste-codegen-saida")
+  # Um erro na tradução de laços pode gerar um programa que nunca termina.
+  set_tests_properties(codegen PROPERTIES TIMEOUT 120)
+  add_test(NAME runtime COMMAND "${Python3_EXECUTABLE}" -B
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_runtime.py")
+  add_executable(teste-ast-manual tests/test_manual_ast.cpp)
+  add_test(NAME ast_manual COMMAND teste-ast-manual)
+  add_executable(teste-pipeline tests/teste_pipeline.cpp src/ast/AstPrinter.cpp
+    src/codegen/PythonGenerator.cpp)
+  target_link_libraries(teste-pipeline PRIVATE oxente_frontend)
+  target_include_directories(teste-pipeline PRIVATE src src/common src/ast src/semantic)
+  add_test(NAME pipeline COMMAND teste-pipeline "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/teste-pipeline-saida")
+  set_tests_properties(pipeline PROPERTIES TIMEOUT 120)
+  add_test(NAME e2e COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_SOURCE_DIR}/tests/e2e.py"
+    $<TARGET_FILE:oxente> "${CMAKE_CURRENT_BINARY_DIR}/teste-e2e-saida")
+  set_tests_properties(e2e PROPERTIES TIMEOUT 180)
 endif()

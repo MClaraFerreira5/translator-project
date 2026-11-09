@@ -7,7 +7,7 @@
     "topicos": ["precedencia", "aritmetica", "parenteses"],
     "descricao": "Multiplicacao antes de soma e agrupamento por parenteses",
     "resultado_esperado": "Exibe 14 e 20 com legendas correspondentes",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-comentarios",
@@ -27,7 +27,7 @@
     "topicos": ["condicionais", "logica", "operadores_relacionais", "precedencia"],
     "descricao": "Condicao papo, ou, e, negação ai_dento e ramos",
     "resultado_esperado": "Exibe 'Acesso permitido'",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-ramos",
@@ -37,7 +37,7 @@
     "topicos": ["condicionais", "se_num_for", "pois_pronto"],
     "descricao": "Condicional com se_num_for e bloco proprio",
     "resultado_esperado": "Exibe 'Recuperacao'",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-reais",
@@ -47,7 +47,7 @@
     "topicos": ["promocao_tipo", "virgula_decimal", "divisao_real"],
     "descricao": "Promocao de inteiro para tronxo e divisao real",
     "resultado_esperado": "Exibe 3,500 e 2,500 com tres casas decimais",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-repeticao",
@@ -57,7 +57,7 @@
     "topicos": ["repeticao", "laco_ate", "acumulacao"],
     "descricao": "num_para ate com condicao de parada booleana",
     "resultado_esperado": "Exibe 15",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-precedencia-potencia",
@@ -67,7 +67,7 @@
     "topicos": ["precedencia", "potencia", "associatividade_direita", "unario"],
     "descricao": "Potencia com associatividade a direita e maior precedencia que unario e multiplicacao",
     "resultado_esperado": "Calcula 2 ** 3 ** 2 = 512,000; -2 ** 2 = -4,000; 3 * 2 ** 3 = 24,000",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-precedencia-logica",
@@ -77,7 +77,7 @@
     "topicos": ["precedencia", "logica", "operadores_relacionais", "ai_dento"],
     "descricao": "Precedencia ai_dento > e > ou e relacionais antes de logicos",
     "resultado_esperado": "Calcula resultados booleanos conforme tabela de precedencia",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-operadores-longos",
@@ -87,7 +87,7 @@
     "topicos": ["operadores_longos", "relacionais", "divisao_inteira", "potencia", "condicionais"],
     "descricao": "Uso de >=, <=, ==, !=, //, **, ai_dento, se_num_for, pois_pronto",
     "resultado_esperado": "Reconhecimento correto e execucao do ramo verdadeiro",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-nl-crlf-eof",
@@ -107,7 +107,7 @@
     "topicos": ["construcoes_aninhadas", "repeticao", "condicionais", "blocos"],
     "descricao": "Condicionais e ramos aninhados dentro de repeticao num_para",
     "resultado_esperado": "Execucao correta dos blocos aninhados exibindo 32",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "val-escopo-independente",
@@ -117,7 +117,7 @@
     "topicos": ["escopos", "reutilizacao_nome", "blocos_independentes"],
     "descricao": "Reutilizacao de mesmo nome em blocos irmaos apos encerramento de visibilidade",
     "resultado_esperado": "Compilacao valida e execucao exibindo 10 e 20",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-lexico-caractere",
@@ -160,8 +160,8 @@
     "topicos": ["erros_gramatica", "operando_ausente", "sintatico"],
     "descricao": "Falta expressao apos operando '+' antes do final de linha",
     "resultado_esperado": "Interrupcao na etapa sintatica com diagnostico de erro gramatical",
-    "causa_tecnica": "erro_sintatico",
-    "status_implementacao": "pendente_card"
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-sintatico-parentese-desbalanceado",
@@ -171,8 +171,8 @@
     "topicos": ["erros_gramatica", "delimitadores", "parenteses"],
     "descricao": "Condicao de vai_que sem fechar parenteses ')'",
     "resultado_esperado": "Interrupcao na etapa sintatica por parentese desbalanceado",
-    "causa_tecnica": "erro_sintatico",
-    "status_implementacao": "pendente_card"
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-sintatico-bloco-nao-fechado",
@@ -182,8 +182,8 @@
     "topicos": ["erros_gramatica", "blocos", "arremata_ausente"],
     "descricao": "Bloco iniciado por bora sem fechamento arremata",
     "resultado_esperado": "Interrupcao na etapa sintatica por bloco nao fechado",
-    "causa_tecnica": "erro_sintatico",
-    "status_implementacao": "pendente_card"
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-sintatico-comparacao-encadeada",
@@ -193,8 +193,8 @@
     "topicos": ["erros_gramatica", "comparacao_encadeada", "relacionais"],
     "descricao": "Comparacao encadeada 1 < 2 < 3 proibida pela gramatica",
     "resultado_esperado": "Interrupcao na etapa sintatica rejeitando operadores relacionais em sequencia",
-    "causa_tecnica": "erro_sintatico",
-    "status_implementacao": "pendente_card"
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-sintatico-tipo-sem-identificador",
@@ -204,8 +204,8 @@
     "topicos": ["erros_gramatica", "declaracao_invalida", "sintatico"],
     "descricao": "Declaracao com tipo seguido de bota sem identificador da variavel",
     "resultado_esperado": "Interrupcao na etapa sintatica por falta de identificador",
-    "causa_tecnica": "erro_sintatico",
-    "status_implementacao": "pendente_card"
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-nao-declarado",
@@ -216,7 +216,7 @@
     "descricao": "Uso de identificador ausente sem declaracao previa",
     "resultado_esperado": "Interrupcao na etapa semantica com nome_nao_declarado",
     "causa_tecnica": "nome_nao_declarado",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-uso-proprio-inicializador",
@@ -227,7 +227,7 @@
     "descricao": "Variavel usada na expressao do seu proprio inicializador antes de estar visivel",
     "resultado_esperado": "Interrupcao na etapa semantica com nome_nao_declarado",
     "causa_tecnica": "nome_nao_declarado",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-tipo",
@@ -238,7 +238,7 @@
     "descricao": "Atribuicao de tronxo para inteiro sem conversao implicita",
     "resultado_esperado": "Interrupcao na etapa semantica com misturou_as_coisas",
     "causa_tecnica": "misturou_as_coisas",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-operacao-tipo",
@@ -249,7 +249,7 @@
     "descricao": "Operacao de adicao entre inteiro e resenha",
     "resultado_esperado": "Interrupcao na etapa semantica com misturou_as_coisas",
     "causa_tecnica": "misturou_as_coisas",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-duplicacao",
@@ -260,7 +260,7 @@
     "descricao": "Redeclaracao do mesmo identificador no mesmo escopo",
     "resultado_esperado": "Interrupcao na etapa semantica com valor_sem_pe_nem_cabeca",
     "causa_tecnica": "valor_sem_pe_nem_cabeca",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-sombreamento",
@@ -271,7 +271,7 @@
     "descricao": "Redeclaracao em bloco interno de variavel ja visivel no bloco externo",
     "resultado_esperado": "Interrupcao na etapa semantica com valor_sem_pe_nem_cabeca",
     "causa_tecnica": "valor_sem_pe_nem_cabeca",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-escopo-fechado",
@@ -282,7 +282,7 @@
     "descricao": "Acesso a variavel declarada em bloco ja finalizado por arremata",
     "resultado_esperado": "Interrupcao na etapa semantica com nome_nao_declarado",
     "causa_tecnica": "nome_nao_declarado",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-condicao-nao-booleana",
@@ -293,7 +293,7 @@
     "descricao": "Condicao do vai_que usando inteiro 1 em vez de papo",
     "resultado_esperado": "Interrupcao na etapa semantica por tipo esperado papo",
     "causa_tecnica": "misturou_as_coisas",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-condicao-repeticao-nao-booleana",
@@ -304,7 +304,7 @@
     "descricao": "Condicao de parada de num_para ate usando inteiro em vez de papo",
     "resultado_esperado": "Interrupcao na etapa semantica por tipo esperado papo",
     "causa_tecnica": "misturou_as_coisas",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
   },
   {
     "id": "inval-semantico-contexto",
@@ -315,6 +315,62 @@
     "descricao": "Instrucao canso utilizada fora de laco de repeticao",
     "resultado_esperado": "Interrupcao na etapa semantica por comando fora de laco",
     "causa_tecnica": "contexto_invalido",
-    "status_implementacao": "pendente_card"
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "val-lacos-aninhados",
+    "arquivo": "examples/valid/lacos-aninhados.oxe",
+    "tipo": "valido",
+    "etapa_responsavel": "semantica",
+    "topicos": [
+      "aninhamento",
+      "arrodeia",
+      "canso_simbora"
+    ],
+    "descricao": "Laco num_para dentro de arrodeia com canso e simbora",
+    "resultado_esperado": "Exibe 4",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "inval-sintatico-ramo-sem-vai-que",
+    "arquivo": "examples/invalid/sintatico-ramo-sem-vai-que.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": [
+      "erros_gramatica",
+      "condicionais"
+    ],
+    "descricao": "Ramo se_num_for sem vai_que anterior",
+    "resultado_esperado": "Erro sintatico na linha 1",
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "inval-sintatico-arrodeia-sem-ate",
+    "arquivo": "examples/invalid/sintatico-arrodeia-sem-ate.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": [
+      "erros_gramatica",
+      "arrodeia"
+    ],
+    "descricao": "Campo de parada de arrodeia sem ate",
+    "resultado_esperado": "Erro sintatico na linha 1",
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
+  },
+  {
+    "id": "inval-sintatico-bora-sem-quebra",
+    "arquivo": "examples/invalid/sintatico-bora-sem-quebra.oxe",
+    "tipo": "invalido",
+    "etapa_responsavel": "sintatica",
+    "topicos": [
+      "erros_gramatica",
+      "blocos"
+    ],
+    "descricao": "Instrucao na mesma linha de bora",
+    "resultado_esperado": "Erro sintatico na linha 1",
+    "causa_tecnica": "sintaxe_invalida",
+    "status_implementacao": "pronto"
   }
 ]

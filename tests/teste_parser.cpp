@@ -214,7 +214,75 @@ int main() {
         assert(arg1 != nullptr && std::get<std::string>(arg1->valor) == "Resultado");
     }
 
-    // 8. Rejeição de Casos Inválidos
+    // 8. Quebras de linha separam instruções; EOF encerra a última
+    {
+        auto sem_quebra_final = parse_codigo("inteiro x bota 1");
+        assert(sem_quebra_final != nullptr && sem_quebra_final->bloco_principal->comandos.size() == 1);
+
+        auto com_linhas_vazias = parse_codigo("\n\ninteiro x bota 1\n\n\nx bota 2\n\n");
+        assert(com_linhas_vazias != nullptr && com_linhas_vazias->bloco_principal->comandos.size() == 2);
+
+        assert(parse_deve_falhar("inteiro x bota 1 inteiro y bota 2\n"));
+        assert(parse_deve_falhar("\n\n"));
+    }
+
+    // 9. Condicional com ramos encadeados e localização
+    {
+        auto ast = parse_codigo(
+            "vai_que (evera) bora\n  canso\narremata\n\nse_num_for (pala) bora\narremata\npois_pronto bora\n  simbora\narremata\n");
+        assert(ast != nullptr && ast->bloco_principal->comandos.size() == 1);
+
+        auto se = dynamic_cast<IfStmtNode*>(ast->bloco_principal->comandos[0].get());
+        assert(se != nullptr && se->loc.line == 1);
+        assert(dynamic_cast<BreakStmtNode*>(se->entao_bloco->comandos[0].get()) != nullptr);
+
+        assert(se->senao_bloco != nullptr && se->senao_bloco->comandos.size() == 1);
+        auto ramo = dynamic_cast<IfStmtNode*>(se->senao_bloco->comandos[0].get());
+        assert(ramo != nullptr && ramo->loc.line == 5);
+        assert(ramo->entao_bloco->comandos.empty());
+        assert(dynamic_cast<ContinueStmtNode*>(ramo->senao_bloco->comandos[0].get()) != nullptr);
+    }
+
+    // 10. Laços e aninhamento
+    {
+        auto ast = parse_codigo(
+            "arrodeia (inteiro i bota 0; ate i > 3; i bota i + 1) bora\n"
+            "    num_para ate (i == 1) bora\n        vai_que (evera) bora\n            canso\n        arremata\n    arremata\n"
+            "arremata\n");
+        assert(ast != nullptr);
+        auto para = dynamic_cast<ForStmtNode*>(ast->bloco_principal->comandos[0].get());
+        assert(para != nullptr);
+        assert(dynamic_cast<VarDeclStmtNode*>(para->inicializacao.get()) != nullptr);
+        assert(dynamic_cast<AssignStmtNode*>(para->incremento.get()) != nullptr);
+        auto enquanto = dynamic_cast<WhileStmtNode*>(para->corpo->comandos[0].get());
+        assert(enquanto != nullptr && enquanto->loc.line == 2);
+        assert(dynamic_cast<IfStmtNode*>(enquanto->corpo->comandos[0].get()) != nullptr);
+    }
+
+    // 11. Rejeição de estruturas de controle malformadas
+    {
+        const char* casos[] = {
+            "se_num_for (evera) bora\narremata\n",
+            "pois_pronto bora\narremata\n",
+            "vai_que (evera) bora\n",
+            "arremata\n",
+            "vai_que evera bora\narremata\n",
+            "vai_que (evera)\nbora\narremata\n",
+            "vai_que (evera) bora desembucha(1)\narremata\n",
+            "vai_que (evera) bora\narremata desembucha(1)\n",
+            "vai_que (evera) bora\narremata\npois_pronto bora\narremata\npois_pronto bora\narremata\n",
+            "vai_que (evera) bora\narremata\npois_pronto bora\narremata\nse_num_for (pala) bora\narremata\n",
+            "vai_que (evera) bora\n  vai_que (pala) bora\n  arremata arremata\n",
+            "num_para (evera) bora\narremata\n",
+            "num_para ate evera bora\narremata\n",
+            "arrodeia (inteiro i bota 0; i > 3; i bota 1) bora\narremata\n",
+            "arrodeia (inteiro i bota 0; ate i > 3) bora\narremata\n",
+            "canso desembucha(1)\n",
+        };
+        for (const char* codigo : casos) assert(parse_deve_falhar(codigo));
+    }
+
+    // 12. Rejeição de Casos Inválidos
     {
         // Comparação encadeada PROIBIDA: 1 < 2 < 3
         assert(parse_deve_falhar("papo r bota 1 < 2 < 3\n"));
