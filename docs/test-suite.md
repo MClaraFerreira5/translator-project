@@ -1,75 +1,72 @@
-# Suíte de Testes Automatizada da Oxente Lang
+# Suíte de testes
 
-Este documento descreve a organização, cobertura, estratégia de execução automatizada e as limitações conhecidas da suíte de testes da linguagem Oxente Lang (Card 15).
+Execute na raiz do repositório com as [dependências](preparacao.md) instaladas:
 
-A suíte foi concebida para transformar exemplos e casos inválidos da especificação em verificações automatizadas de forma progressiva: ela valida rigorosamente os módulos já entregues (como o scanner léxico e helpers de runtime) e acompanha o avanço dos cards em desenvolvimento (parser, analisador semântico e gerador de código) **sem mascarar testes falhos nem emitir falsos sucessos**.
-
----
-
-## 1. Estrutura e Catálogo de Testes
-
-A suíte é orientada por um catálogo estruturado em formato legível por máquina (`tests/suite_manifest.json`), no qual cada cenário define:
-- **Identificador**: código único do caso (ex.: `val-calculo`, `inval-semantico-tipo`).
-- **Arquivo de entrada**: programa `.oxe` correspondente em `examples/valid/` ou `examples/invalid/`.
-- **Tipo**: `valido` ou `invalido`.
-- **Etapa responsável**: `lexica`, `sintatica`, `semantica` ou `runtime`.
-- **Tópicos cobertos**: categorias da especificação exercitadas.
-- **Resultado esperado**: comportamento previsto ou código/diagnóstico esperado.
-- **Status de implementação**: `pronto` (para módulos já implementados) ou `pendente_card` (para módulos em construção).
-
----
-
-## 2. Matriz de Cobertura dos Critérios de Aceite
-
-A suíte cobre 100% dos tópicos exigidos pela especificação:
-
-| Critério de Aceite | Casos que exercitam | Descrição do teste |
-| :--- | :--- | :--- |
-| **Precedência** | `calculo.oxe`<br>`precedencia-potencia.oxe`<br>`precedencia-logica.oxe` | Multiplicação antes de soma; `**` associativo à direita com maior prioridade que unário; `ai_dento` > `e` > `ou`; relacionais antes de lógicos. |
-| **Declaração antes do uso** | `semantico-nao-declarado.oxe`<br>`semantico-uso-proprio-inicializador.oxe` | Uso de identificador ausente; uso de variável na expressão do próprio inicializador (`inteiro x bota x + 1`). |
-| **Tipos incompatíveis** | `semantico-tipo.oxe`<br>`semantico-operacao-tipo.oxe` | Atribuição de `tronxo` para `inteiro` sem conversão implícita; operações aritméticas inválidas (`inteiro` + `resenha`). |
-| **Duplicação** | `semantico-duplicacao.oxe` | Redeclaração de variável com mesmo nome no mesmo escopo. |
-| **Escopos** | `semantico-sombreamento.oxe`<br>`semantico-escopo-fechado.oxe`<br>`escopo-independente.oxe` | Proibição de sombreamento em blocos aninhados; acesso a variáveis após o fechamento do bloco com `arremata`; reutilização válida em blocos irmãos. |
-| **Condições não booleanas** | `semantico-condicao-nao-booleana.oxe`<br>`semantico-condicao-repeticao-nao-booleana.oxe` | Condição de `vai_que` usando inteiro em vez de `papo`; condição de `num_para ate` usando número. |
-| **Operadores longos** | `operadores-longos.oxe` | Operadores multi-caractere: `>=`, `<=`, `==`, `!=`, `//`, `**`, `ai_dento`, `se_num_for`, `pois_pronto`. |
-| **Textos e comentários** | `comentarios.oxe`<br>`lexico-texto-nao-terminado.oxe`<br>`lexico-comentario-nao-terminado.oxe` | Delimitadores `vei ... tendeu`, comentários de linha `primeiramente`, bloco `espia ... arriba`, e rejeição de literais/comentários não terminados. |
-| **NL (quebras de linha)** | `nl-crlf-eof.oxe` | Quebras de linha consecutivas, comentários intercalados e término no EOF sem quebra obrigatória final. |
-| **Construções aninhadas** | `aninhamento.oxe` | Condicionais com múltiplos ramos aninhados dentro de laço de repetição `num_para ate`. |
-| **Erros de gramática** | `sintatico-operando.oxe`<br>`sintatico-parentese-desbalanceado.oxe`<br>`sintatico-bloco-nao-fechado.oxe`<br>`sintatico-comparacao-encadeada.oxe`<br>`sintatico-tipo-sem-identificador.oxe` | Falta de operando; parênteses não balanceados; bloco sem `arremata`; encadeamento `1 < 2 < 3`; declaração sem identificador. |
-
----
-
-## 3. Como Executar a Suíte
-
-### Execução via Python (Runner direto)
-Com os binários compilados em `build/`, execute:
-```powershell
-python tests/executar_suite.py
-```
-
-### Execução via CMake / CTest
-A suíte também pode ser executada por meio do runner de testes do CMake:
-```powershell
+```bash
+cmake -S . -B build -DBUILD_TESTING=ON
+cmake --build build --parallel 2
 ctest --test-dir build --output-on-failure
 ```
 
----
+`sh scripts/build-e-testes.sh` executa configuração, build e CTest. A CI usa esse
+script. Use uma pasta nova para validar a compilação desde o início.
 
-## 4. Resultados Reais e Limitações Conhecidas
+## Organização e alcance
 
-Em conformidade com as diretrizes do projeto, os testes reportam o estado real dos componentes sem mascarar funcionalidades incompletas:
+| Teste CTest | Verificação |
+| --- | --- |
+| `lexer` | Tokens, lexemas, localizações, reservadas, operadores, estados, LF/CRLF/EOF e falhas |
+| `lexer_harness` | Códigos e canais de `oxente-tokens` |
+| `cli` | Argumentos, arquivos, modos, códigos de saída e preservação de saída em erros |
+| `build_limpo` | Configuração e compilação em árvore separada, sem testes |
+| `diagnosticos` | Formatação, etapas, localização e motor de diagnósticos |
+| `suite` | Aceitação/rejeição dos exemplos pelo scanner ou `--check` |
+| `scope` | Tabela de símbolos, blocos, nomes visíveis e sombreamento |
+| `parser` | AST real, precedência, associatividade, comandos, blocos, laços e entradas inválidas |
+| `semantic` | Tipos, nomes e contexto de laços em ASTs manuais |
+| `codegen` | ASTs manuais → Python → execução e comparação da saída |
+| `runtime` | Entrada/saída, divisões, potência, conversões e resultados reais não finitos |
+| `ast_manual` | Construção explícita dos nós da AST |
+| `pipeline` | Parser → AST → análise de escopos → geração e execução Python |
+| `e2e` | CLI real → Python autossuficiente → stdout, stderr e código de saída |
 
-1. **Etapa Léxica (Aprovada - 100%)**:
-   - O scanner Flex (`oxente-tokens`) valida com precisão tanto os casos válidos (palavras canônicas, literais, comentários, quebras) quanto a detecção de caracteres inválidos e delimitações incompletas.
-2. **Etapa Sintática e Semântica (Aprovada)**:
-   - `oxente --check` valida os casos do catálogo; `tests/test_semantic.cpp` (teste `semantic` no CTest) confere tipos e contextos com ASTs manuais.
-3. **Runtime Python (Aprovado)**:
-   - Os helpers de execução e comportamento de operadores/erros de execução são verificados independentemente via `tests/test_runtime.py` (teste `runtime` no CTest).
-4. **Gerador Python (Aprovado, sem parser)**:
-   - `tests/test_codegen.cpp` (teste `codegen` no CTest) monta ASTs manualmente, gera o Python, executa-o com Python 3 e compara a saída. Cobre expressões, tipos, nomes internos, condicionais, laços aninhados, `canso`, `simbora` e escopos.
-5. **Parser (Aprovado)**:
-   - `tests/teste_parser.cpp` (teste `parser` no CTest) confere a AST construída, precedência, associatividade, localização, quebras de linha, blocos, condicionais, laços e rejeição de entradas inválidas.
-6. **Pipeline a partir de `.oxe` (Aprovado)**:
-   - `tests/teste_pipeline.cpp` (teste `pipeline` no CTest) confere a saída de `--dump-ast` e passa a mesma AST pela análise de escopos e pelo gerador, executando os programas válidos do catálogo e os casos de fluxo de controle.
-7. **Ponta a ponta pela CLI (Aprovado)**:
-   - `tests/e2e.py` (teste `e2e` no CTest) traduz com `oxente --emit-python`, executa o `.py` em uma pasta isolada e compara stdout, stderr e código de saída. Cobre os exemplos válidos, entrada/saída, erros de execução, `arrodeia` com `simbora`, escopos, divisão negativa e o diagnóstico de todos os casos inválidos.
+O [catálogo](../tests/suite_manifest.json) descreve os exemplos válidos e inválidos,
+etapas responsáveis, tópicos e diagnósticos esperados. O [índice de exemplos](../examples/README.md)
+explica cada programa. `suite.cmake` mantém chamadas explícitas dos casos; não
+interpreta o manifesto JSON. `e2e.py` consulta o manifesto para os inválidos e mantém
+as saídas completas dos válidos em `EXEMPLOS`.
+
+`e2e` também cobre entradas dos quatro tipos, erros de execução, escopos, divisão
+negativa, laços com `simbora`, curto-circuito e regressões numéricas. Cada Python
+roda fora da árvore fonte, sem `PYTHONPATH`, para verificar o runtime embutido.
+`codegen`, `pipeline` e `e2e` têm limites de tempo no CTest para detectar laços que
+não terminam.
+
+## Executar partes da suíte
+
+```bash
+ctest --test-dir build -R '^(lexer|lexer_harness|parser)$' --output-on-failure
+ctest --test-dir build -R '^(suite|e2e)$' --verbose
+python3 tests/e2e.py ./build/oxente build/e2e-manual
+```
+
+O runner alternativo `python3 tests/executar_suite.py` procura binários em `build/`
+ou na raiz; não encontra automaticamente builds em subpastas. Ele verifica o
+catálogo, mas não substitui o CTest nem a execução do Python gerado.
+
+## Limitações e leitura dos resultados
+
+A presença de um tópico no catálogo indica cobertura por casos, não prova de
+cobertura completa da especificação. `suite` verifica principalmente códigos de
+saída; `e2e` confere também os diagnósticos dos inválidos e a saída dos válidos.
+Os runners do catálogo ainda contêm tratamento histórico para modo indisponível
+(código 4) e binários ausentes. Na validação atual não deve haver casos pulados ou
+pendentes; confira os totais na saída detalhada.
+
+A faixa inteira da linguagem e as decisões provisórias de textos, comentários,
+`arrodeia` e I/O continuam abertas na especificação. Os testes validam o
+comportamento atual, sem aprovar essas decisões. WSL e máquina de apresentação
+precisam de verificação pelo grupo. Há uma falha conhecida em `lexer_harness` no
+build nativo MSYS2.
+
+As evidências desta preparação estão no [registro de revisão](revisao-apresentacao.md).

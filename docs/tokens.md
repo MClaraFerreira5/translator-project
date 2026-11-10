@@ -1,8 +1,8 @@
 # Catálogo de tokens e decisões léxicas
 
 Base: §3 e tabela final da [definição entregue](references/definicao-entregue.md).
-O scanner Flex da OX-04 implementa o subconjunto inequívoco deste catálogo.
-O [contrato técnico e as limitações](../README.md#scanner-e-inspeção-de-tokens-ox-04)
+O scanner Flex implementa este catálogo com as restrições descritas abaixo.
+O [contrato técnico e as limitações](frontend.md)
 distinguem reconhecimento léxico de suporte sintático/semântico.
 Consulte a [especificação](language-spec.md) e a [gramática inicial](grammar.md).
 
@@ -78,10 +78,9 @@ representação literal da palavra `tendeu` ainda não estão definidos.
 
 `abs` é palavra reservada de cálculo, com forma `abs(expressao)`.
 `//` é divisão inteira, não comentário. `=` isolado e aspas não têm token de
-atribuição/texto definido. Ao implementar, será necessário distinguir operadores
-de vários caracteres de seus prefixos e palavras completas de identificadores;
-o reconhecimento de maior correspondência e os limites de palavras são testados
-no Flex pela OX-04.
+atribuição/texto definido. O Flex distingue operadores de vários caracteres de seus prefixos pela maior
+correspondência. Palavras completas são distinguidas de identificadores; ambos
+os comportamentos são cobertos pelos testes do scanner.
 
 ## Comentários e linhas
 

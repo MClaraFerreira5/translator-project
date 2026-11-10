@@ -32,7 +32,7 @@ A AST construída é:
 
 Aspas representam grafias de tokens; `|` indica alternativa, `[ ]` opcionalidade
 e `{ }` repetição. `IDENT`, `INTEIRO`, `REAL`, `TEXTO` e `FIM_LINHA` são categorias
-descritivas, sem compromisso com nomes futuros no Bison. `TEXTO` representa o
+descritivas; `FIM_LINHA` corresponde a `NL` no Bison. `TEXTO` representa o
 literal inteiro delimitado por `vei`/`tendeu`.
 
 No esboço, LF e CRLF correspondem a `FIM_LINHA`; EOF pode fornecer o término
@@ -149,11 +149,11 @@ forma de procedimento, retorno vazio e demais detalhes dependem de confirmação
 - Formalizar campos e escopo de `arrodeia`, além da interação com `simbora`.
 - Confirmar blocos vazios, chamada de saída vazia e separação entre ramos por
   linhas vazias/comentários.
-- Resolver espaços significativos e textos antes da integração lexer/parser.
+- Confirmar espaços significativos e textos; a integração atual descarta `ESPACO`.
 - Confirmar potência com expoente unário e explicitar casos de combinação de
-  operadores que o esboço permite, sem apresentá-los como já testados.
+  operadores que o esboço permite, distinguindo testes da implementação de aprovação da regra.
 - Completar sintaxe da extensão e revisar `funcao`/`aperreio` na fonte.
 
 As extensões futuras do Bison deverão verificar conflitos e respeitar as
-decisões confirmadas. O [contrato da API atual](../README.md#parser-de-expressões-e-comandos-simples-ox-05)
-distingue o subconjunto implementado das construções e decisões pendentes.
+decisões confirmadas. O [contrato da API atual](frontend.md#parser-e-construção-da-ast)
+distingue o núcleo implementado das construções e decisões pendentes.

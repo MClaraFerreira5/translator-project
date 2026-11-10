@@ -92,6 +92,7 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
+        // --check e --emit-python exigem a mesma AST aprovada pela semântica.
         oxente::SemanticAnalyzer analise(&engine);
         programa->accept(analise);
         if (analise.tem_erros) return 1;
@@ -101,6 +102,7 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
+        // O runtime embutido torna o Python gerado independente do checkout.
         oxente::PythonGenerator gerador;
         const std::string codigo = gerador.gerar(*programa, oxente::RUNTIME_PYTHON);
         if (!tem_saida) {

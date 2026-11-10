@@ -4,14 +4,14 @@ As regras desta consolidação derivam da [versão entregue](references/definica
 A mudança de destino para Python 3 é uma decisão posterior explícita do grupo,
 registrada na OX-01; a proposta histórica permanece preservada.
 A proposta foi aprovada e o núcleo do tradutor está implementado; o
-[estado por etapa](../README.md#estado-atual) mostra o que já existe. Regras
+[estado da implementação](architecture.md#estado-da-implementação) mostra o que já existe. Regras
 descritas aqui são compromissos documentais; esboços e lacunas são identificados.
 Consulte a [procedência das fontes](references/README.md).
 
 ## Destino e escopo prioritário
 
-O tradutor será implementado em **C++17 com Flex e Bison** e gerará **Python 3**.
-O fluxo planejado é: arquivo `.oxe` → Flex → Bison → AST → análise
+O tradutor é implementado em **C++17 com Flex e Bison** e gera **Python 3**.
+O fluxo implementado é: arquivo `.oxe` → Flex → Bison → AST → análise
 semântica/tabela de símbolos → gerador Python 3 → execução com Python 3.
 A escolha segue a recomendação do professor para simplificar a geração de código
 e dispensar a compilação da linguagem-alvo antes da execução.
@@ -41,7 +41,8 @@ interno. Blocos independentes podem reutilizar nomes que deixaram de ser visíve
 
 Operações numéricas mistas e atribuições para `tronxo` admitem promoção de
 `inteiro`. Não há conversão implícita inversa nem entre números, textos e booleanos.
-Limites numéricos concretos ainda serão documentados na implementação.
+Os limites atuais da implementação estão no [contrato do frontend](frontend.md)
+e no [runtime](runtime.md); as faixas da linguagem continuam pendentes.
 
 ## Expressões
 
@@ -129,7 +130,7 @@ desta versão; a menção de lista não altera esse escopo.
 | Ocorrência na fonte | Tratamento e impacto |
 | --- | --- |
 | §2.6 usa `funcao`; tabelas dos §§3 e 8 usam `aperreio` | Adotar `aperreio` para a extensão; confirmar a revisão da descrição e a sintaxe de funções |
-| §3 menciona campos de `Arrodeia` | Usar somente `arrodeia`, conforme tabelas; definir cabeçalho detalhado antes do parser |
+| §3 menciona campos de `Arrodeia` | Usar somente `arrodeia`, conforme tabelas; confirmar o cabeçalho provisório implementado |
 | §§2.3, 2.4, 4 e 5 ainda empregam `int`/`bool` ou terminologia usual | Tipos-fonte são `inteiro`, `tronxo`, `papo`, `resenha`; não aceitar aliases antigos |
 | §3 diz que espaços são significativos | Não deduzir indentação sintática; confirmar tratamento fora de textos e limites de palavras |
 | §8 inclui `liso` e `balaio` sem regras | Manter pendentes e fora dos exemplos do núcleo |

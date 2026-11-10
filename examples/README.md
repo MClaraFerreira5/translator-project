@@ -8,7 +8,7 @@ Os três primeiros casos válidos derivam do §7 da
 substituídas por quebras de linha LF reais somente nestas cópias derivadas.
 
 Todos os códigos são ASCII, usam palavras canônicas e mantêm uma instrução por
-linha. `valid/` e `invalid/` indicam expectativas para testes futuros.
+linha. `valid/` e `invalid/` organizam os casos verificados pela suíte atual.
 
 ## Casos válidos
 
@@ -29,9 +29,9 @@ linha. `valid/` e `invalid/` indicam expectativas para testes futuros.
 | [lacos-aninhados.oxe](valid/lacos-aninhados.oxe) | `num_para` dentro de `arrodeia`, com `canso` e `simbora` | Exibe 4 |
 
 A fonte ilustra o cálculo com `Resultado 14` e `Com parenteses 20` em linhas
-distintas. Isso serve como referência, mas separação exata de argumentos e
-término de saída ainda precisam de contrato explícito. Não se estabelece aqui
-uma comparação de saída byte a byte. Não há exemplos válidos de funções, `liso` ou
+distintas. A suíte `e2e` compara a saída completa com um espaço entre argumentos e uma
+quebra de linha ao final, conforme o comportamento provisório do runtime. A
+aprovação desses separadores como regra da linguagem continua pendente. Não há exemplos válidos de funções, `liso` ou
 `balaio`, cujas regras completas estão pendentes. A forma de `arrodeia` usada em
 `lacos-aninhados.oxe` ainda precisa ser confirmada pelo grupo.
 
