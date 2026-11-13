@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Prompt Interativo (REPL) para Oxente Lang
-Permite digitar códigos em Oxente Lang, compilar em tempo real e ver a transcrição em Python 3 limpo.
+Permite digitar códigos em Oxente Lang, compilar em tempo real e ver a transcrição em Python 3 limpo ou a AST.
 """
 
 import os
@@ -22,9 +22,9 @@ BANNER = r"""
   Escreva código Oxente Lang e veja o Python correspondente!
 ======================================================
 Comandos especiais:
-  :exec       -> Executa o código gerado
-  :cru        -> Alterna exibição do código completo (com runtime interno)
-  :ast        -> Mostra a árvore sintática (AST) do código
+  :ast        -> Mostra a árvore sintática (AST) do último código
+  :exec       -> Executa o código Python gerado
+  :cru        -> Alterna exibição do código completo com runtime
   :limpar     -> Limpa o código digitado
   :sair       -> Encerra o REPL
   (Pressione ENTER numa linha vazia para compilar o bloco)
@@ -32,28 +32,17 @@ Comandos especiais:
 """
 
 def limpar_codigo_python(codigo_completo: str) -> str:
-    """
-    Remove todo o boilerplate/runtime interno e converte
-    v1_var para var e _ox_desembucha(...) para print(...).
-    """
     linhas = codigo_completo.splitlines()
     linhas_usuario = []
-    
-    # Ignora importações iniciais, comentários de cabeçalho e definições de funções auxiliares _ox_*
     dentro_de_funcao = False
+
     for linha in linhas:
         linha_strip = linha.strip()
-        
-        # Ignora cabeçalho gerado e imports
         if linha_strip.startswith("# Gerado pelo tradutor") or linha_strip.startswith("import sys") or linha_strip.startswith("import math"):
             continue
-            
-        # Detecta início de funções de suporte _ox_*
         if linha.startswith("def _ox_"):
             dentro_de_funcao = True
             continue
-            
-        # Se estamos dentro de uma função auxiliar de runtime
         if dentro_de_funcao:
             if linha.startswith("def _ox_"):
                 continue
@@ -69,21 +58,13 @@ def limpar_codigo_python(codigo_completo: str) -> str:
             linhas_usuario.append(linha)
 
     codigo_limpo = "\n".join(linhas_usuario)
-
-    # 1. Troca _ox_desembucha(...) por print(...)
     codigo_limpo = re.sub(r'\b_ox_desembucha\b', 'print', codigo_limpo)
-
-    # 2. Converte variáveis renomeadas pelo gerador (ex: v1_a -> a, v2_soma -> soma)
     codigo_limpo = re.sub(r'\bv\d+_([a-zA-Z_][a-zA-Z0-9_]*)\b', r'\1', codigo_limpo)
-
-    # 3. Simplifica chamadas de runtime aritmético comuns para operadores normais se houver
-    # Ex: _ox_soma(a, b) -> a + b (caso ocorram)
     codigo_limpo = re.sub(r'_ox_div\(([^,]+),\s*([^)]+)\)', r'(\1 / \2)', codigo_limpo)
     codigo_limpo = re.sub(r'_ox_div_int\(([^,]+),\s*([^)]+)\)', r'(\1 // \2)', codigo_limpo)
     codigo_limpo = re.sub(r'_ox_mod\(([^,]+),\s*([^)]+)\)', r'(\1 % \2)', codigo_limpo)
     codigo_limpo = re.sub(r'_ox_pot\(([^,]+),\s*([^)]+)\)', r'(\1 ** \2)', codigo_limpo)
     codigo_limpo = re.sub(r'_ox_diga_ai\([^)]*\)', r'input()', codigo_limpo)
-
     return codigo_limpo.strip()
 
 def compilar(codigo_oxe: str, modo: str = "--emit-python"):
@@ -114,6 +95,7 @@ def compilar(codigo_oxe: str, modo: str = "--emit-python"):
 
 def main():
     print(BANNER)
+    ultimo_codigo_oxe = ""
     ultimo_python_completo = ""
     mostrar_cru = False
 
@@ -142,14 +124,21 @@ def main():
                         break
                     elif cmd == ":exec":
                         if not ultimo_python_completo:
-                            print("Nenhum código Python compilado recentemente para executar.")
+                            print("[Aviso] Nenhum código Python compilado recentemente para executar.")
                         else:
                             print("\n--- Executando Programa ---")
                             subprocess.run([sys.executable, "-c", ultimo_python_completo])
                             print("---------------------------\n")
                         break
                     elif cmd == ":ast":
-                        print("[Modo AST: digite o código abaixo e aperte Enter duas vezes]")
+                        if not ultimo_codigo_oxe:
+                            print("[Aviso] Nenhum código digitado ainda para exibir a AST. Digite um código primeiro!")
+                        else:
+                            sucesso_ast, saida_ast = compilar(ultimo_codigo_oxe, modo="--dump-ast")
+                            print("\n🌳 Árvore Sintática Abstrata (AST):")
+                            print("-" * 40)
+                            print(saida_ast.strip())
+                            print("-" * 40 + "\n")
                         break
                     else:
                         print(f"Comando desconhecido: {cmd}")
@@ -170,11 +159,14 @@ def main():
         if not codigo:
             continue
 
+        ultimo_codigo_oxe = codigo
+
+        print("\n Compilando e traduzindo...")
         sucesso, saida = compilar(codigo, modo="--emit-python")
 
         if sucesso:
             ultimo_python_completo = saida
-            print("Código Python:")
+            print("\Sucesso! Código Python:")
             print("-" * 40)
             if mostrar_cru:
                 print(saida.strip())
@@ -182,8 +174,9 @@ def main():
                 limpo = limpar_codigo_python(saida)
                 print(limpo if limpo else saida.strip())
             print("-" * 40)
+            print("Dica: digite ':ast' para ver a árvore ou ':exec' para rodar.\n")
         else:
-            print("Erro encontrado:")
+            print("\Erro encontrado no código:")
             print("-" * 40)
             print(saida)
             print("-" * 40 + "\n")
